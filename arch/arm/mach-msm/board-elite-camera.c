@@ -395,31 +395,27 @@ static int camera_sensor_power_enable(char *power, unsigned volt, struct regulat
 		return -ENODEV;
 
 	*sensor_power = regulator_get(NULL, power);
-
 	if (IS_ERR(*sensor_power)) {
-		pr_info("%s: failed to Unable to get %s\n", __func__, power);
+		pr_err("%s: Unable to get %s\n", __func__, power);
 		return -ENODEV;
 	}
-
 	if (volt != 1800000) {
 		rc = regulator_set_voltage(*sensor_power, volt, volt);
 		if (rc < 0) {
-			pr_info("%s: failed to unable to set %s voltage to %d rc:%d\n",
+			pr_err("%s: unable to set %s voltage to %d rc:%d\n",
 					__func__, power, volt, rc);
 			regulator_put(*sensor_power);
 			*sensor_power = NULL;
 			return -ENODEV;
 		}
 	}
-
 	rc = regulator_enable(*sensor_power);
 	if (rc < 0) {
-		pr_info("%s: failed to Enable regulator %s failed\n", __func__, power);
+		pr_err("%s: Enable regulator %s failed\n", __func__, power);
 		regulator_put(*sensor_power);
 		*sensor_power = NULL;
 		return -ENODEV;
 	}
-
 	return rc;
 }
 
@@ -431,18 +427,19 @@ static int camera_sensor_power_disable(struct regulator *sensor_power)
 		return -ENODEV;
 
 	if (IS_ERR(sensor_power)) {
-		pr_info("%s: failed to Invalid requlator ptr\n", __func__);
+		pr_err("%s: Invalid requlator ptr\n", __func__);
 		return -ENODEV;
 	}
 
 	rc = regulator_disable(sensor_power);
 	if (rc < 0)
-		pr_info("%s: disable regulator failed\n", __func__);
+		pr_err("%s: disable regulator failed\n", __func__);
 
 	regulator_put(sensor_power);
 	sensor_power = NULL;
 	return rc;
 }
+
 
 static int elite_csi_vreg_on(void)
 {
