@@ -72,6 +72,7 @@ struct akm8975_platform_data {
 	short layouts[4][3][3];
 	short irq_trigger;
 	int use_pana_gyro;
+	int (*power_LPM)(int on);
 };
 
 void akm_get_akmd_data(short *getdata);
