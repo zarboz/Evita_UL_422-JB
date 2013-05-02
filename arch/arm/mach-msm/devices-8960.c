@@ -2829,6 +2829,7 @@ struct platform_device msm_slim_ctrl = {
 	},
 };
 
+/* end cmdline_gpu */
 static struct msm_dcvs_freq_entry grp3d_freq[] = {
 	{0, 0, 333932},
 	{0, 0, 497532},

@@ -449,7 +449,10 @@ static int acpuclk_krait_set_rate(int cpu, unsigned long rate,
 
 	if (cpu > num_possible_cpus())
 		return -EINVAL;
-
+#ifdef CONFIG_CMDLINE_OPTIONS
+	if ((cmdline_scroff == true) && (rate >cmdline_maxscroff))
+	    rate = cmdline_maxscroff;
+#endif
 	if (reason == SETRATE_CPUFREQ || reason == SETRATE_HOTPLUG)
 		mutex_lock(&driver_lock);
 
@@ -1025,6 +1028,7 @@ static int __init get_pvs_bin(u32 pte_efuse)
 	}
 
 	return pvs_bin;
+
 }
 
 static struct pvs_table * __init select_freq_plan(u32 pte_efuse_phys,
@@ -1045,7 +1049,9 @@ static struct pvs_table * __init select_freq_plan(u32 pte_efuse_phys,
 	
 	drv.speed_bin = get_speed_bin(pte_efuse_val);
 	drv.pvs_bin = get_pvs_bin(pte_efuse_val);
-
+#ifdef CONFIG_DEBUG_FS
+        krait_chip_variant = drv.pvs_bin;
+#endif
 	return &pvs_tables[drv.speed_bin][drv.pvs_bin];
 }
 
@@ -1125,6 +1131,44 @@ static void __init hw_init(void)
 
 	bus_init(l2_level);
 }
+
+#ifdef CONFIG_DEBUG_FS
+static int krait_variant_debugfs_show(struct seq_file *s, void *data)
+{
+	seq_printf(s, "Your krait chip variant is: \n");
+	seq_printf(s, "[%s] SLOWEST \n", ((krait_chip_variant == 0) ? "X" : " "));
+	seq_printf(s, "[%s] SLOWER \n", ((krait_chip_variant == 1) ? "X" : " "));
+	seq_printf(s, "[%s] SLOW \n", ((krait_chip_variant == 2) ? "X" : " "));
+	seq_printf(s, "[%s] NOM \n", ((krait_chip_variant == 3) ? "X" : " "));
+	seq_printf(s, "[%s] FAST \n", ((krait_chip_variant == 4) ? "X" : " "));
+	seq_printf(s, "[%s] FASTER \n", ((krait_chip_variant == 5) ? "X" : " "));
+	seq_printf(s, "[%s] FASTEST \n", ((krait_chip_variant == 6) ? "X" : " "));
+
+	return 0;
+}
+
+static int krait_variant_debugfs_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, krait_variant_debugfs_show, inode->i_private);
+}
+
+static const struct file_operations krait_variant_debugfs_fops = {
+	.open		= krait_variant_debugfs_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
+static int __init krait_variant_debugfs_init(void) {
+        struct dentry *d;
+        d = debugfs_create_file("krait_variant", S_IRUGO, NULL, NULL,
+        &krait_variant_debugfs_fops);
+        if (!d)
+                return -ENOMEM;
+        return 0;
+}
+late_initcall(krait_variant_debugfs_init);
+#endif
 
 int __init acpuclk_krait_init(struct device *dev,
 			      const struct acpuclk_krait_params *params)

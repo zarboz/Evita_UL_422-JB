@@ -595,9 +595,8 @@ static struct acpu_level acpu_freq_tbl_8960_kraitv2_slow[] = {
 	{ 0, {  1404000, HFPLL, 1, 0, 0x34 }, L2(19), 1237500 },
 	{ 1, {  1458000, HFPLL, 1, 0, 0x36 }, L2(19), 1237500 },
 	{ 1, {  1512000, HFPLL, 1, 0, 0x38 }, L2(19), 1250000 },
-	{ 1, {  1566000, HFPLL, 1, 0, 0x3A }, L2(16), 1275000 },
-	{ 1, {  1674000, HFPLL, 1, 0, 0x3E }, L2(16), 1300000 },
-	{ 1, {  1728000, HFPLL, 1, 0, 0x40 }, L2(16), 1325000 },
+	{ 1, {  1647000, HFPLL, 1, 0, 0x3D }, L2(19), 1250000 },
+	{ 1, {  1728000, HFPLL, 1, 0, 0x40 }, L2(19), 1275000 },
 	{ 0, { 0 } }
 };
 
@@ -1585,7 +1584,10 @@ static int acpuclk_8960_set_rate(int cpu, unsigned long rate,
 
 	if (cpu > num_possible_cpus())
 		return -EINVAL;
-
+#ifdef CONFIG_CMDLINE_OPTIONS
+	if ((cmdline_scroff == true) && (rate >cmdline_maxscroff))
+	    rate = cmdline_maxscroff;
+#endif
 	if (reason == SETRATE_CPUFREQ || reason == SETRATE_HOTPLUG)
 		mutex_lock(&driver_lock);
 
@@ -1935,6 +1937,48 @@ static void kraitv2_apply_vmin(struct acpu_level *tbl)
 			tbl->vdd_core = 1150000;
 }
 
+#ifdef CONFIG_CMDLINE_OPTIONS
+uint32_t acpu_check_khz_value(unsigned long khz)
+{
+	struct acpu_level *f;
+
+	if (khz > 1728000)
+		return CONFIG_MSM_CPU_FREQ_MAX;
+
+	if (khz < 162000)
+		return CONFIG_MSM_CPU_FREQ_MIN;
+
+	for (f = acpu_freq_tbl_8960_kraitv2_slow, acpu_freq_tbl_8960_kraitv2_nom, acpu_freq_tbl_8960_kraitv2_fast; f->speed.khz != 0; f++) {
+		if (khz < 162000) {
+			if (f->speed.khz == (khz*1000))
+				return f->speed.khz;
+			if ((khz*1000) > f->speed.khz) {
+				f++;
+				if ((khz*1000) < f->speed.khz) {
+					f--;
+					return f->speed.khz;
+				}
+				f--;
+			}
+		}
+		if (f->speed.khz == khz) {
+			return 1;
+		}
+		if (khz > f->speed.khz) {
+			f++;
+			if (khz < f->speed.khz) {
+				f--;
+				return f->speed.khz;
+			}
+			f--;
+		}
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(acpu_check_khz_value);
+/* end cmdline_khz */
+#endif
 #ifdef CONFIG_APQ8064_ONLY 
 unsigned long acpuclk_krait_power_collapse(void)
 {
