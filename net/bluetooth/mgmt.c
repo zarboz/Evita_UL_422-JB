@@ -359,7 +359,7 @@ static int set_powered(struct sock *sk, u16 index, unsigned char *data, u16 len)
 
 	cp = (void *) data;
 
-	BT_INFO("DEBUG: %s: request for hci%u, cp->val : %d", __func__, index, cp->val);
+	BT_DBG("request for hci%u", index);
 
 	if (len != sizeof(*cp))
 		return cmd_status(sk, index, MGMT_OP_SET_POWERED, EINVAL);
@@ -387,13 +387,11 @@ static int set_powered(struct sock *sk, u16 index, unsigned char *data, u16 len)
 		goto failed;
 	}
 
-	if (cp->val) {
-		BT_INFO("DEBUG: %s: power_on work getting queued",  __func__);
+	if (cp->val)
 		queue_work(hdev->workqueue, &hdev->power_on);
-	} else {
-		BT_INFO("DEBUG: %s: power_off work getting queued",  __func__);
+	else
 		queue_work(hdev->workqueue, &hdev->power_off);
-	}
+
 	err = 0;
 
 failed:
@@ -569,7 +567,7 @@ static int set_discoverable(struct sock *sk, u16 index, unsigned char *data,
 
 	if (cp->val)
 		scan |= SCAN_INQUIRY;
-	BT_INFO("DEBUG:%s:  HCI_OP_WRITE_SCAN_ENABLE",  __func__);
+
 	err = hci_send_cmd(hdev, HCI_OP_WRITE_SCAN_ENABLE, 1, &scan);
 	if (err < 0)
 		mgmt_pending_remove(cmd);
@@ -629,7 +627,7 @@ static int set_connectable(struct sock *sk, u16 index, unsigned char *data,
 		scan = SCAN_PAGE;
 	else
 		scan = 0;
-	BT_INFO("DEBUG:%s:  HCI_OP_WRITE_SCAN_ENABLE",  __func__);
+
 	err = hci_send_cmd(hdev, HCI_OP_WRITE_SCAN_ENABLE, 1, &scan);
 	if (err < 0)
 		mgmt_pending_remove(cmd);
@@ -2287,7 +2285,7 @@ int mgmt_control(struct sock *sk, struct msghdr *msg, size_t msglen)
 		goto done;
 	}
 
-	BT_INFO("DEBUG:%s: got opcode %x",  __func__,opcode);
+	BT_DBG("got opcode %x", opcode);
 	switch (opcode) {
 	case MGMT_OP_READ_VERSION:
 		err = read_version(sk);
@@ -2444,7 +2442,7 @@ int mgmt_powered(u16 index, u8 powered)
 	struct cmd_lookup match = { powered, NULL };
 	int ret;
 
-	BT_INFO("DEBUG: %s: hci%u %d",  __func__,index, powered);
+	BT_DBG("hci%u %d", index, powered);
 
 	mgmt_pending_foreach(MGMT_OP_SET_POWERED, index, mode_rsp, &match);
 

@@ -52,18 +52,16 @@
 #include <asm/unaligned.h>
 
 #include <net/bluetooth/bluetooth.h>
-#include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
 #include <net/bluetooth/l2cap.h>
 #include <net/bluetooth/smp.h>
 #include <net/bluetooth/amp.h>
 
 bool disable_ertm;
-bool enable_hs;
 bool enable_reconfig;
 
 static u32 l2cap_feat_mask = L2CAP_FEAT_FIXED_CHAN;
-static u8 l2cap_fc_mask = L2CAP_FC_L2CAP;
+static u8 l2cap_fixed_chan[8] = { L2CAP_FC_L2CAP | L2CAP_FC_A2MP, };
 
 struct workqueue_struct *_l2cap_wq;
 
@@ -686,9 +684,6 @@ void l2cap_send_cmd(struct l2cap_conn *conn, u8 ident, u8 code, u16 len, void *d
 	if (!skb)
 		return;
 
-	if (conn->hcon == NULL || conn->hcon->hdev == NULL)
-		return;
-
 	if (lmp_no_flush_capable(conn->hcon->hdev))
 		flags = ACL_START_NO_FLUSH;
 	else
@@ -743,7 +738,6 @@ static void l2cap_do_start(struct sock *sk)
 
 			if (l2cap_pi(sk)->amp_pref ==
 					BT_AMP_POLICY_PREFER_AMP &&
-					enable_hs &&
 					conn->fc_mask & L2CAP_FC_A2MP)
 				amp_create_physical(conn, sk);
 			else
@@ -851,7 +845,6 @@ static void l2cap_conn_start(struct l2cap_conn *conn)
 
 			if (l2cap_pi(sk)->amp_pref ==
 					BT_AMP_POLICY_PREFER_AMP &&
-					enable_hs &&
 					conn->fc_mask & L2CAP_FC_A2MP)
 				amp_create_physical(conn, sk);
 			else
@@ -2642,8 +2635,7 @@ void l2cap_amp_move_init(struct sock *sk)
 	if (!l2cap_pi(sk)->conn)
 		return;
 
-	
-	if (!(l2cap_pi(sk)->conn->fc_mask & L2CAP_FC_A2MP) || !enable_hs)
+	if (!(l2cap_pi(sk)->conn->fc_mask & L2CAP_FC_A2MP))
 		return;
 
 	if (l2cap_pi(sk)->amp_id == 0) {
@@ -4529,15 +4521,10 @@ static inline int l2cap_information_req(struct l2cap_conn *conn, struct l2cap_cm
 					L2CAP_INFO_RSP, sizeof(buf), buf);
 	} else if (type == L2CAP_IT_FIXED_CHAN) {
 		u8 buf[12];
-		u8 fc_mask = l2cap_fc_mask;
 		struct l2cap_info_rsp *rsp = (struct l2cap_info_rsp *) buf;
 		rsp->type   = cpu_to_le16(L2CAP_IT_FIXED_CHAN);
 		rsp->result = cpu_to_le16(L2CAP_IR_SUCCESS);
-		
-		if (enable_hs)
-			fc_mask |= L2CAP_FC_A2MP;
-		memset(rsp->data, 0, 8);
-		rsp->data[0] = fc_mask;
+		memcpy(buf + 4, l2cap_fixed_chan, 8);
 		l2cap_send_cmd(conn, cmd->ident,
 					L2CAP_INFO_RSP, sizeof(buf), buf);
 	} else {
@@ -7136,8 +7123,7 @@ static void l2cap_recv_frame(struct l2cap_conn *conn, struct sk_buff *skb)
 				l2cap_data_channel(sk, skb);
 
 			bh_unlock_sock(sk);
-		
-		} else if ((cid == L2CAP_CID_A2MP) && enable_hs) {
+		} else if (cid == L2CAP_CID_A2MP) {
 			BT_DBG("A2MP");
 			amp_conn_ind(conn, skb);
 		} else {
@@ -7291,11 +7277,8 @@ static int l2cap_security_cfm(struct hci_conn *hcon, u8 status, u8 encrypt)
 			if (!status) {
 				l2cap_pi(sk)->conf_state |=
 						L2CAP_CONF_CONNECT_PEND;
-				
-					
-				if ((l2cap_pi(sk)->amp_pref ==
-					BT_AMP_POLICY_PREFER_AMP) &&
-					enable_hs) {
+				if (l2cap_pi(sk)->amp_pref ==
+						BT_AMP_POLICY_PREFER_AMP) {
 					amp_create_physical(l2cap_pi(sk)->conn,
 								sk);
 				} else
@@ -7585,9 +7568,6 @@ void l2cap_exit(void)
 
 module_param(disable_ertm, bool, 0644);
 MODULE_PARM_DESC(disable_ertm, "Disable enhanced retransmission mode");
-
-module_param(enable_hs, bool, 0644);
-MODULE_PARM_DESC(enable_hs, "Enable A2MP protocol");
 
 module_param(enable_reconfig, bool, 0644);
 MODULE_PARM_DESC(enable_reconfig, "Enable reconfig after initiating AMP move");

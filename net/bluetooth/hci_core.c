@@ -124,7 +124,7 @@ static int __hci_request(struct hci_dev *hdev, void (*req)(struct hci_dev *hdev,
 	DECLARE_WAITQUEUE(wait, current);
 	int err = 0;
 
-	BT_INFO("DEBUG: %s : %s start", __func__, hdev->name);
+	BT_DBG("%s start", hdev->name);
 
 	hdev->req_status = HCI_REQ_PEND;
 
@@ -155,7 +155,7 @@ static int __hci_request(struct hci_dev *hdev, void (*req)(struct hci_dev *hdev,
 
 	hdev->req_status = hdev->req_result = 0;
 
-	BT_INFO("DEBUG: %s : %s end: err %d", __func__, hdev->name, err);
+	BT_DBG("%s end: err %d", hdev->name, err);
 
 	return err;
 }
@@ -971,7 +971,7 @@ static void hci_power_on(struct work_struct *work)
 	struct hci_dev *hdev = container_of(work, struct hci_dev, power_on);
 	int err;
 
-	BT_INFO("DEBUG: %s: %s", __func__, hdev->name);
+	BT_DBG("%s", hdev->name);
 
 	err = hci_dev_open(hdev->id);
 	if (err && err != -EALREADY)
@@ -1042,7 +1042,7 @@ static void hci_auto_off(unsigned long data)
 {
 	struct hci_dev *hdev = (struct hci_dev *) data;
 
-	BT_INFO("DEBUG: %s: %s", __func__, hdev->name);
+	BT_DBG("%s", hdev->name);
 
 	clear_bit(HCI_AUTO_OFF, &hdev->flags);
 
@@ -1255,15 +1255,7 @@ static void hci_cmd_timer(unsigned long arg)
 {
 	struct hci_dev *hdev = (void *) arg;
 
-	if (hdev->sent_cmd) {
-		struct hci_command_hdr *sent = (void *) hdev->sent_cmd->data;
-		u16 opcode = __le16_to_cpu(sent->opcode);
-
-		BT_ERR("DEBUG %s: %s command 0x%4.4x tx timeout", __func__, hdev->name, opcode);
-	} else {
-		BT_ERR("DEBUG %s: %s command tx timeout", __func__, hdev->name);
-	}
-
+	BT_ERR("%s command tx timeout", hdev->name);
 	atomic_set(&hdev->cmd_cnt, 1);
 	clear_bit(HCI_RESET, &hdev->flags);
 	tasklet_schedule(&hdev->cmd_task);
@@ -2489,12 +2481,6 @@ static void hci_cmd_task(unsigned long arg)
 		kfree_skb(hdev->sent_cmd);
 
 		hdev->sent_cmd = skb_clone(skb, GFP_ATOMIC);
-
-		if (hdev->sent_cmd) {
-			struct hci_command_hdr *sent = (void *) hdev->sent_cmd->data;
-			u16 opcode = __le16_to_cpu(sent->opcode);
-			BT_INFO("DEBUG: %s: opcode %x", __func__, opcode);
-		}
 		if (hdev->sent_cmd) {
 			atomic_dec(&hdev->cmd_cnt);
 			hci_send_frame(skb);
