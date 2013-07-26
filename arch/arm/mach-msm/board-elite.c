@@ -5101,6 +5101,7 @@ static void __init msm8960_i2c_init(void)
 }
 
 
+
 #ifdef CONFIG_HTC_BATT_8960
 static struct pm8921_charger_batt_param chg_batt_params[] = {
 	
