@@ -295,6 +295,7 @@ extern struct rpm_regulator_platform_data msm_rpm_regulator_pdata __devinitdata;
 void msm8960_init_fb(void);
 void elite_allocate_fb_regions(void);
 void msm8960_init_mmc(void);
+void elite_init_gpu(void);
 
 void elite_lcd_id_power(int pull);
 

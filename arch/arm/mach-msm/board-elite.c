@@ -32,7 +32,7 @@
 #include <linux/bma250.h>
 #include <linux/slimbus/slimbus.h>
 #include <linux/bootmem.h>
-#include <linux/msm_kgsl.h>
+#include <mach/kgsl.h>
 #ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
 #endif
@@ -62,6 +62,7 @@
 #else
 #include <linux/usb/msm_hsusb.h>
 #endif
+#include <linux/platform_device.h>
 #include <mach/htc_usb.h>
 #include <mach/usbdiag.h>
 #include <mach/socinfo.h>
@@ -75,6 +76,7 @@
 #include <mach/htc_headset_mgr.h>
 #include <mach/htc_headset_pmic.h>
 #include <mach/htc_headset_one_wire.h>
+#include <mach/msm_dcvs.h>
 
 #ifdef CONFIG_WCD9310_CODEC
 #include <linux/slimbus/slimbus.h>
@@ -106,6 +108,8 @@
 #include <mach/htc_util.h>
 #include <mach/cable_detect.h>
 #include <mach/panel_id.h>
+#include <mach/msm_bus_board.h>
+#include <mach/socinfo.h>
 #include <linux/mfd/pm8xxx/pm8xxx-vibrator-pwm.h>
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL
@@ -1102,7 +1106,6 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
 								HTC_BATT_CHG_LIMIT_BIT_NAVI,
 	.critical_low_voltage_mv = 3100,
-	.critical_alarm_voltage_mv = 3000,
 	.overload_vol_thr_mv = 4000,
 	.overload_curr_thr_ma = 0,
 	
@@ -5097,17 +5100,6 @@ static void __init msm8960_i2c_init(void)
 					&msm8960_i2c_qup_gsbi5_pdata;
 }
 
-static void __init msm8960_gfx_init(void)
-{
-	uint32_t soc_platform_version = socinfo_get_version();
-	if (SOCINFO_VERSION_MAJOR(soc_platform_version) == 1) {
-		struct kgsl_device_platform_data *kgsl_3d0_pdata =
-				msm_kgsl_3d0.dev.platform_data;
-		kgsl_3d0_pdata->pwrlevel[0].gpu_freq = 320000000;
-		kgsl_3d0_pdata->pwrlevel[1].gpu_freq = 266667000;
-		kgsl_3d0_pdata->nap_allowed = false;
-	}
-}
 
 #ifdef CONFIG_HTC_BATT_8960
 static struct pm8921_charger_batt_param chg_batt_params[] = {
@@ -5909,7 +5901,7 @@ static void __init elite_init(void)
 				&msm8960_ssbi_pm8921_pdata;
 	pm8921_platform_data.num_regulators = msm_pm8921_regulator_pdata_len;
 	msm8960_i2c_init();
-	msm8960_gfx_init();
+	elite_init_gpu();
 
 	elite_cable_detect_register();
 
