@@ -1,0 +1,97 @@
+##
+#
+# AROMA Installer - Jmz Kernel
+#       (c) 2011 by Ahmad Amarullah
+#           amarullz - xda-developers
+#
+#                Version 2.51
+#
+##
+
+#ini_set("dp","3");
+
+theme("sense");
+
+anisplash(
+  #-- Number of Loop
+    4,
+  
+  #-- Frame 1 [ Image, duration in millisecond ]. <AROMA Resource Dir>/splash/a[1..6].png
+    "splash/a1", 500,
+    "splash/a2", 30,
+    "splash/a3", 30,
+    "splash/a4", 30,
+    "splash/a5", 30,
+    "splash/a6", 30
+);
+
+fontresload( "0", "ttf/Roboto-Regular.ttf", "12" );
+fontresload( "1", "ttf/Roboto-Regular.ttf", "18" );
+
+#Content
+
+#set vars
+ini_set("rom_name",             "Jmz Kernel");
+ini_set("rom_author",           "Jmz");
+ini_set("rom_device",           "HTC First (mystul)");
+ini_set("rom_date",             "Mar 4 - 2013");
+
+
+viewbox(
+  "Welcome",
+    "\n\n\n\n\n"+
+    "           	You're about to flash\n"+
+    "      		"+ini_get("rom_name")+" for "+ini_get("rom_device")+"\n\n"+
+    "\n\n\n"+
+    "  AUTHOR : <#800>"+ini_get("rom_author")+"</#>\n"+
+    "  VERSION : <#080>"+ini_get("rom_version")+"</#>\n"+
+    "  UPDATED : <#008>"+ini_get("rom_date")+"</#>\n\n"+
+    "  HOMEPAGE : <#008></#>\n\n\n"+
+    "Press Next to continue the installation...",
+  "icons/info"
+);
+
+textbox(
+  "Changelog",
+  "Komodo Changelog",
+  "icons/info",
+  readfile_aroma("changelogs.txt")
+);
+
+
+#appendvar("installmsg","\n\nPlease select installation type below:");
+
+#selectbox(
+#  "Do you want Sweep2wake?",
+#  "Please Select:",
+#  "icons/personalize",
+#  "sweep.prop",
+#  "Enabled","Default",1,
+#  "Disabled","",0
+  
+#);
+
+viewbox(
+  "Ready To Install",
+  "Click -Next- to start the installation...",
+  "icons/info"
+);
+
+install(
+  "Installing",
+  "Installing Kernel...\nPlease wait until I am finished...",
+  "icons/install"
+);
+
+# Set Next Text fo Finish
+ini_set("text_next", "Finish");
+
+viewbox(
+  "Installation Completed",
+  "<#080>Congratulation...</#>\n\n"+
+  "Jmz Kernel has been installed\n\n"+
+  "Press Finish, and Reboot your phone.\n\n"+
+  "\n\n\n\n"+
+  ".....\n\n\nThank you",
+  "icons/info"
+);

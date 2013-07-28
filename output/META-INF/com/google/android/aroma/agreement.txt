@@ -1,0 +1,22 @@
+/*
+ * Your warranty is now void.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * I am not responsible if it kills your grandmother, grows you
+ * a blue tail or lights up your house.
+ *
+ * You flash this, you are responsible.
+ */
+
+Bugs go into the issue tracker, which you will search before posting a new issue! Yours may already be in there!
+
+Now install this shit ;)

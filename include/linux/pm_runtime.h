@@ -65,16 +65,15 @@ static inline void pm_runtime_get_noresume(struct device *dev)
 
 	
 	
-	#if defined(CONFIG_USB_EHCI_MSM_HSIC)
+		#if defined(CONFIG_USB_EHCI_MSM_HSIC)
 	{
 		extern unsigned int get_radio_flag(void);
-		if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+		if (dev && msm_hsic_host_dev == dev && (get_radio_flag() & 0x0001)) {
 			dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
 				atomic_read(&dev->power.usage_count));
 		}
 	}
 	#endif	
-	
 	
 }
 
@@ -87,12 +86,12 @@ static inline void pm_runtime_put_noidle(struct device *dev)
 	#if defined(CONFIG_USB_EHCI_MSM_HSIC)
 	{
 		extern unsigned int get_radio_flag(void);
-		if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+		if (dev && msm_hsic_host_dev == dev && (get_radio_flag() & 0x0001)) {
 			dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
 				atomic_read(&dev->power.usage_count));
 		}
 	}
-	#endif	
+	#endif		
 	
 	
 }

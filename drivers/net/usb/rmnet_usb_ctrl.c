@@ -23,13 +23,8 @@
 #include <mach/board_htc.h>
 
 #define DEVICE_NAME			"hsicctl"
-#define HTC_HSIC_DEVICE_NAME		"htc_hsicctl"
-
 #define NUM_CTRL_CHANNELS		4
 #define DEFAULT_READ_URB_LENGTH		0x1000
-
-#define HTC_RMNET_IOCTL_DEFINE 0xCC
-#define HTC_RMNET_USB_SET_ITC _IOW(HTC_RMNET_IOCTL_DEFINE, 201, int)
 
 #define ACM_CTRL_DTR		BIT(0)
 #define ACM_CTRL_RTS		BIT(1)
@@ -181,9 +176,6 @@ do { \
 struct rmnet_ctrl_dev		*ctrl_dev[NUM_CTRL_CHANNELS];
 struct class			*ctrldev_classp;
 static dev_t			ctrldev_num;
-struct device			*hsicdevicep;
-struct class			*hsicctrldev_classp;
-static int				htc_hsicctrldev_major;
 
 struct ctrl_pkt {
 	size_t	data_size;
@@ -752,10 +744,8 @@ static int rmnet_ctl_open(struct inode *inode, struct file *file)
 	if (!dev)
 		return -ENODEV;
 
-	if (dev->is_opened) {
-		file->private_data = dev;
+	if (dev->is_opened)
 		goto already_opened;
-	}
 
 	
 	if (dev->is_connected) {
@@ -1042,11 +1032,6 @@ static long rmnet_ctrl_ioctl(struct file *file, unsigned int cmd,
 	case TIOCMSET:
 		ret = rmnet_ctrl_tiocmset(dev, arg, ~arg);
 		break;
-	case HTC_RMNET_USB_SET_ITC:
-		{
-			ret = 0;
-		}
-		break;
 	default:
 		ret = -EINVAL;
 	}
@@ -1062,197 +1047,6 @@ static const struct file_operations ctrldev_fops = {
 	.open  = rmnet_ctl_open,
 	.release = rmnet_ctl_release,
 	.poll = rmnet_ctl_poll,
-};
-
-#define HSIC_FAST_INTERRUPT_LATENCY 1
-#define HSIC_SLOW_INTERRUPT_LATENCY 6
-
-static int enable_shorten_itc_count = 0;
-static int rmnet_ctrl_set_itc( struct rmnet_ctrl_dev *dev, int value ) {
-	int ret = 0;
-	int enable = 0;
-	struct usb_device	*udev;
-
-	if (!dev) {
-		pr_info("[%s] dev is null\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!dev->intf) {
-		pr_info("[%s] intf is null\n", __func__);
-		return -ENODEV;
-	}
-
-	udev = interface_to_usbdev(dev->intf);
-
-	switch(value) {
-		case 1://enable
-			enable = 1;
-			break;
-		case 0://disable
-			enable = 0;
-			break;
-		default://other
-			pr_info("[%s][%s] value=[%d]\n", __func__, dev->name, value);
-			return -ENODEV;
-	}
-	
-
-	pr_info("[%s][%s] mutex_lock\n", __func__, dev->name);
-	mutex_lock(&dev->dev_lock);
-
-	if ( ! ( dev->is_opened && dev->resp_available ) ) {
-		pr_err("[%s] is_opened=[%d], resp_available=[%d]\n", __func__, dev->is_opened, dev->resp_available);
-		mutex_unlock(&dev->dev_lock);
-		return -ENODEV;
-	}
-	pr_info("[%s] is_opened=[%d], resp_available=[%d]\n", __func__, dev->is_opened, dev->resp_available);
-	pr_info("[%s] enable_shorten_itc_count:%d enable:%d\n", __func__, enable_shorten_itc_count, enable);
-	if ( enable ) {
-		if (enable_shorten_itc_count == 0) {
-			
-			ret = usb_autopm_get_interface(dev->intf);
-			if (ret < 0) {
-				pr_info("[%s] Unable to resume interface: %d\n", __func__, ret);
-				mutex_unlock(&dev->dev_lock);
-				return -ENODEV;
-			}
-
-			pr_info("[%s][%s] usb_set_interrupt_latency(1)+\n", __func__, dev->name);
-			ret = usb_set_interrupt_latency(udev, HSIC_FAST_INTERRUPT_LATENCY);
-			pr_info("[%s][%s] usb_set_interrupt_latency-\n", __func__, dev->name);
-			if ( dev->intf )
-				usb_autopm_put_interface(dev->intf);
-			else
-				pr_err("[%s]dev->intf=NULL\n", __func__);
-		}
-		enable_shorten_itc_count++;
-	} else {
-		if ( enable_shorten_itc_count < 1 ) {
-			
-			pr_info("[%s][%s] set_shorten_interrupt_latency_count is %d\n", __func__, dev->name, enable_shorten_itc_count);
-		} else {
-			enable_shorten_itc_count--;
-			if (enable_shorten_itc_count == 0) {
-				ret = usb_autopm_get_interface(dev->intf);
-				if (ret < 0) {
-					pr_info("[%s] Unable to resume interface: %d\n", __func__, ret);
-					mutex_unlock(&dev->dev_lock);
-					return -ENODEV;
-				}
-				pr_info("[%s][%s] usb_set_interrupt_latency(6)+\n", __func__, dev->name);
-				ret = usb_set_interrupt_latency(udev, HSIC_SLOW_INTERRUPT_LATENCY);
-				pr_info("[%s][%s] usb_set_interrupt_latency-\n", __func__, dev->name);
-				if ( dev->intf )
-					usb_autopm_put_interface(dev->intf);
-				else
-					pr_err("[%s]dev->intf=NULL\n", __func__);
-			}
-		}
-	}
-	mutex_unlock(&dev->dev_lock);
-	pr_info("[%s][%s] mutex_unlock\n", __func__, dev->name);
-
-	return ret;
-}
-
-static ssize_t rmnet_hsic_ctl_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
-{
-	return -ENODEV;
-}
-
-static ssize_t rmnet_hsic_ctl_write(struct file *file, const char __user * buf, size_t size, loff_t *pos)
-{
-	return -ENODEV;
-}
-
-static long rmnet_hsic_ctrl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-{
-	int			ret;
-	struct rmnet_ctrl_dev	*dev;
-
-	dev = file->private_data;
-	if (!dev)
-		return -ENODEV;
-
-	switch (cmd) {
-	case HTC_RMNET_USB_SET_ITC:
-		{
-			int value = 0;
-			get_user(value, (unsigned long __user *)arg);
-			ret = rmnet_ctrl_set_itc ( dev, value );
-		}
-		break;
-	default:
-		ret = -EINVAL;
-	}
-
-	return ret;
-}
-
-static int rmnet_hsic_ctl_open(struct inode *inode, struct file *file)
-{
-	int			retval = 0;
-	struct rmnet_ctrl_dev *dev = NULL;
-	dev = ctrl_dev[0];
-
-	if (!dev || !file)
-		return -ENODEV;
-
-	if (dev->is_connected) {
-		if (dev->intf)
-			dev_info(&dev->intf->dev, "%s[%d]:mdm_wait_timeout:%d resp_available:%d\n", __func__, __LINE__, dev->mdm_wait_timeout, dev->resp_available);
-	}
-
-	
-	if (dev->mdm_wait_timeout && !dev->resp_available) {
-		retval = wait_event_interruptible_timeout(
-					dev->open_wait_queue,
-					dev->resp_available,
-					msecs_to_jiffies(dev->mdm_wait_timeout *
-									1000));
-		if (retval == 0) {
-			dev_err(dev->devicep, "%s: Timeout opening %s\n",
-						__func__, dev->name);
-			return -ETIMEDOUT;
-		} else if (retval < 0) {
-			dev_err(dev->devicep, "%s: Error waiting for %s\n",
-						__func__, dev->name);
-			return retval;
-		}
-	}
-
-	if (!dev->resp_available) {
-		dev_err(dev->devicep, "%s: Connection timedout opening %s\n",
-					__func__, dev->name);
-
-		return -ETIMEDOUT;
-	}
-
-	file->private_data = dev;
-
-	return 0;
-}
-
-static int rmnet_hsic_ctl_release(struct inode *inode, struct file *file)
-{
-	file->private_data = NULL;
-	return 0;
-}
-
-static unsigned int rmnet_hsic_ctl_poll(struct file *file, poll_table *wait)
-{
-	return POLLERR;
-}
-
-static const struct file_operations hsicctrldev_fops = {
-	.owner = THIS_MODULE,
-	.read  = rmnet_hsic_ctl_read,
-	.write = rmnet_hsic_ctl_write,
-	.unlocked_ioctl = rmnet_hsic_ctrl_ioctl,
-	.open  = rmnet_hsic_ctl_open,
-	.release = rmnet_hsic_ctl_release,
-	.poll = rmnet_hsic_ctl_poll,
 };
 
 int rmnet_usb_ctrl_probe(struct usb_interface *intf,
@@ -1499,7 +1293,6 @@ int rmnet_usb_ctrl_init(void)
 	struct rmnet_ctrl_dev	*dev;
 	int			n;
 	int			status;
-	int			ret = 0;
 
 	
 	if (get_radio_flag() & 0x0001)
@@ -1602,36 +1395,9 @@ int rmnet_usb_ctrl_init(void)
 	}
 
 	rmnet_usb_ctrl_debugfs_init();
-	do {
-		pr_info("%s: register_chrdev\n", __func__);
-		ret = register_chrdev(0, HTC_HSIC_DEVICE_NAME, &hsicctrldev_fops);
-		if ( ret < 0 ) {
-			pr_err("%s: register_chrdev, ret=[%d]\n", __func__, ret);
-			break;
-		}
-		pr_info("%s: register_chrdev, ret=[%d]\n", __func__, ret);
-		htc_hsicctrldev_major = ret;
-		pr_info("%s: class_create\n", __func__);
-		hsicctrldev_classp = class_create(THIS_MODULE, HTC_HSIC_DEVICE_NAME);
-		if (IS_ERR(hsicctrldev_classp)) {
-			pr_err("%s: class_create() ENOMEM\n", __func__);
-			unregister_chrdev( htc_hsicctrldev_major, HTC_HSIC_DEVICE_NAME );
-			break;
-		}
-		pr_info("%s: device_create\n", __func__);
-		hsicdevicep = device_create(hsicctrldev_classp, NULL, MKDEV(htc_hsicctrldev_major, 0), NULL, HTC_HSIC_DEVICE_NAME);
-		if (IS_ERR(hsicdevicep)) {
-			pr_err("%s: device_create() ENOMEM\n", __func__);
-			class_destroy(hsicctrldev_classp);
-			hsicctrldev_classp = NULL;
-			hsicdevicep = NULL;
-			break;
-		}
-	}
-	while ( 0 );
-
 	pr_info("rmnet usb ctrl Initialized.\n");
 	return 0;
+
 error2:
 		while (--n >= 0) {
 			cdev_del(&ctrl_dev[n]->cdev);
@@ -1675,20 +1441,5 @@ void rmnet_usb_ctrl_exit(void)
 
 	class_destroy(ctrldev_classp);
 	unregister_chrdev_region(MAJOR(ctrldev_num), NUM_CTRL_CHANNELS);
-
-	if ( hsicctrldev_classp != NULL ) {
-		pr_info("%s: device_destroy\n", __func__);
-		device_destroy(hsicctrldev_classp, MKDEV(htc_hsicctrldev_major, 0));
-		pr_info("%s: class_unregister\n", __func__);
-		class_unregister(hsicctrldev_classp);
-		pr_info("%s: class_destroy\n", __func__);
-		class_destroy(hsicctrldev_classp);
-		pr_info("%s: unregister_chrdev\n", __func__);
-		unregister_chrdev(htc_hsicctrldev_major, HTC_HSIC_DEVICE_NAME);
-		hsicctrldev_classp = NULL;
-		hsicdevicep = NULL;
-		enable_shorten_itc_count = 0;
-	}
-
 	rmnet_usb_ctrl_debugfs_exit();
 }
