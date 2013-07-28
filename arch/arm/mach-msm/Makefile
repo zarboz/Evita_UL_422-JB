@@ -290,12 +290,14 @@ board-8960-all-objs += board-8960.o board-8960-camera.o board-8960-display.o boa
 board-8930-all-objs += board-8930.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-8930-gpiomux.o devices-8930.o board-8930-gpu.o
 board-8064-all-objs += board-8064.o board-8064-pmic.o board-8064-storage.o board-8064-gpiomux.o board-8064-camera.o board-8064-display.o board-8064-gpu.o
 board-elite-all-objs += board-elite.o board-elite-gpiomux.o devices-8960.o board-8960-storage.o board-elite-gpu.o
+board-operaul-all-objs +=  board-operaul-pmic.o board-operaul-storage.o board-operaul-gpiomux.o devices-8930.o
 # board-monarudo-all-objs += board-monarudo.o board-monarudo-pmic.o board-monarudo-storage.o board-monarudo-gpiomux.o board-monarudo-display.o board-monarudo-gpu.o board-monarudo-keypad.o board-monarudo-wifi.o
 board-monarudo-all-objs += board-monarudo.o board-monarudo-pmic.o board-monarudo-storage.o board-monarudo-gpiomux.o board-monarudo-display.o board-monarudo-gpu.o board-monarudo-keypad.o board-monarudo-wifi.o  board-monarudo-audio.o
 board-m7-all-objs += board-m7.o board-m7-pmic.o board-m7-storage.o board-m7-gpiomux.o board-m7-keypad.o board-m7-wifi.o board-m7-audio.o
 
 ifdef CONFIG_FB_MSM
 board-m7-all-objs += board-m7-display.o board-m7-gpu.o
+board-operaul-all-objs += board-operaul-display.o board-operaul-gpu.o
 endif
 ifdef CONFIG_MSM_CAMERA
 board-monarudo-all-objs += board-monarudo-camera.o
@@ -342,7 +344,11 @@ obj-$(CONFIG_MACH_VALENTE_WX) += board-valente_wx.o board-valente_wx-regulator.o
 obj-$(CONFIG_MACH_VALENTE_WX) += board-valente_wx-keypad.o
 obj-$(CONFIG_MACH_VALENTE_WX) += htc_bdaddress.o
 obj-$(CONFIG_MACH_VALENTE_WX) += htc_util.o
-
+obj-$(CONFIG_MACH_OPERAUL) += board-operaul.o board-operaul-all.o board-operaul-regulator.o board-operaul-audio.o
+obj-$(CONFIG_MACH_OPERAUL) += htc_bdaddress.o board-operaul-rfkill.o htc_sleep_clk.o htc_util.o board-operaul-camera.o
+#obj-$(CONFIG_MACH_OPERAUL) += htc_acoustic.o
+obj-$(CONFIG_MACH_OPERAUL) += board-operaul-keypad.o
+obj-$(CONFIG_MACH_OPERAUL) += board-operaul-mmc.o board-operaul-wifi.o htc_wifi_nvs.o
 
 
 

@@ -268,6 +268,12 @@ config MACH_ELITE
 	help
 	  Support for the HTC Elite
 
+config MACH_OPERAUL
+	depends on ARCH_MSM8930
+	bool "OperaUL"
+	help
+	  Support for the HTC OperaUL
+
 config MACH_VILLE
 	depends on ARCH_MSM8960
 	bool "Ville"

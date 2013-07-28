@@ -1,0 +1,170 @@
+./drivers/cpufreq/longhaul.h:59:static const int __cpuinitdata samuel1_mults[16] = {
+./drivers/cpufreq/longhaul.h:78:static const int __cpuinitdata samuel1_eblcr[16] = {
+./drivers/cpufreq/longhaul.h:100:static const int __cpuinitdata samuel2_eblcr[16] = {
+./drivers/cpufreq/longhaul.h:122:static const int __cpuinitdata ezra_mults[16] = {
+./drivers/cpufreq/longhaul.h:141:static const int __cpuinitdata ezra_eblcr[16] = {
+./drivers/cpufreq/longhaul.h:163:static const int __cpuinitdata ezrat_mults[32] = {
+./drivers/cpufreq/longhaul.h:199:static const int __cpuinitdata ezrat_eblcr[32] = {
+./drivers/cpufreq/longhaul.h:238:static const int __cpuinitdata nehemiah_mults[32] = {
+./drivers/cpufreq/longhaul.h:273:static const int __cpuinitdata nehemiah_eblcr[32] = {
+./drivers/cpufreq/longhaul.h:318:static const struct mV_pos __cpuinitdata vrm85_mV[32] = {
+./drivers/cpufreq/longhaul.h:329:static const unsigned char __cpuinitdata mV_vrm85[32] = {
+./drivers/cpufreq/longhaul.h:336:static const struct mV_pos __cpuinitdata mobilevrm_mV[32] = {
+./drivers/cpufreq/longhaul.h:347:static const unsigned char __cpuinitdata mV_mobilevrm[32] = {
+./drivers/cpufreq/cpufreq.c.orig:1629:static int __cpuinit cpufreq_cpu_callback(struct notifier_block *nfb,
+./drivers/acpi/processor_driver.c:465: * acpi_cpu_soft_notify(). Getting it __cpuinit{data} is difficult, the
+./drivers/acpi/processor_core.c:269:static struct acpi_object_list *__cpuinit acpi_processor_alloc_pdc(void)
+./drivers/base/topology.c.orig:146:static int __cpuinit topology_add_dev(unsigned int cpu)
+./drivers/base/topology.c.orig:150:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./drivers/base/cpu.c.orig:241:int __cpuinit register_cpu(struct cpu *cpu, int num)
+./drivers/base/cpu.c.orig:252:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./kernel/timer.c.orig:1134:	static char __cpuinitdata tvec_base_done[NR_CPUS];
+./kernel/timer.c.orig:1138:>>>>>>> ee57e14... cpuinit: get rid of __cpuinit, third regexp
+./kernel/rcutree.c.orig:1552:static void __cpuinit
+./kernel/rcutree.c.orig:1561:>>>>>>> 480e870... cpuinit: get rid of __cpuinit, fourth regexp
+./kernel/stop_machine.c.orig:264:static struct notifier_block __cpuinitdata cpu_stop_cpu_notifier = {
+./kernel/stop_machine.c.orig:272:>>>>>>> ee57e14... cpuinit: get rid of __cpuinit, third regexp
+./kernel/rcutree_plugin.h.orig:668:static void __cpuinit rcu_preempt_init_percpu_data(int cpu)
+./kernel/rcutree_plugin.h.orig:674:>>>>>>> 021cd80... cpuinit: get rid of __cpuinit, manual fixups
+./kernel/rcutree_plugin.h.orig:819:static void __cpuinit rcu_preempt_init_percpu_data(int cpu)
+./kernel/rcutree_plugin.h.orig:826:>>>>>>> 021cd80... cpuinit: get rid of __cpuinit, manual fixups
+./kernel/rcutree_plugin.h.orig:1004:static int __cpuinit rcu_spawn_one_boost_kthread(struct rcu_state *rsp,
+./kernel/rcutree_plugin.h.orig:1012:>>>>>>> 021cd80... cpuinit: get rid of __cpuinit, manual fixups
+./kernel/rcutree_plugin.h.orig:1182:static int __cpuinit rcu_spawn_one_cpu_kthread(int cpu)
+./kernel/rcutree_plugin.h.orig:1206:>>>>>>> 021cd80... cpuinit: get rid of __cpuinit, manual fixups
+./kernel/rcutree_plugin.h.orig:1293:static int __cpuinit rcu_spawn_one_node_kthread(struct rcu_state *rsp,
+./kernel/rcutree_plugin.h.orig:1302:>>>>>>> 021cd80... cpuinit: get rid of __cpuinit, manual fixups
+./kernel/workqueue.c.orig:2345:static void __cpuinit wait_trustee_state(struct global_cwq *gcwq, int state)
+./kernel/workqueue.c.orig:2359:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./kernel/hrtimer.c.orig:1236:static void __cpuinit init_hrtimers_cpu(int cpu)
+./kernel/hrtimer.c.orig:1242:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./kernel/hrtimer.c.orig:1245:	static char __cpuinitdata cpu_base_done[NR_CPUS];
+./kernel/hrtimer.c.orig:1350:static struct notifier_block __cpuinitdata hrtimers_nb = {
+./kernel/printk.c.orig:1046:static __cpuinitdata DECLARE_WORK(console_cpu_notify_work, console_flush);
+./kernel/printk.c.orig:1049:static int __cpuinit console_cpu_notify(struct notifier_block *self,
+./kernel/printk.c.orig:1066:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./kernel/sched/core.c.orig:4079:static int __cpuinit
+./kernel/sched/core.c.orig:4086:>>>>>>> 480e870... cpuinit: get rid of __cpuinit, fourth regexp
+./kernel/cpu.c.orig:259:static int __cpuinit _cpu_up(unsigned int cpu, int tasks_frozen)
+./kernel/cpu.c.orig:263:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./kernel/cpu.c.orig:300:int __cpuinit cpu_up(unsigned int cpu)
+./kernel/cpu.c.orig:303:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./kernel/cpu.c.orig:504:void __cpuinit notify_cpu_starting(unsigned int cpu)
+./kernel/cpu.c.orig:515:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./kernel/rcutree.h:384:static void __cpuinit rcu_preempt_init_percpu_data(int cpu);
+./kernel/rcutree.h:395:static int __cpuinit rcu_spawn_one_boost_kthread(struct rcu_state *rsp,
+./kernel/rcutree.h:402:static void __cpuinit rcu_prepare_kthreads(int cpu);
+./kernel/rcutree_plugin.h:667:static void __cpuinit rcu_preempt_init_percpu_data(int cpu)
+./kernel/rcutree_plugin.h:811:static void __cpuinit rcu_preempt_init_percpu_data(int cpu)
+./kernel/rcutree_plugin.h:988:static int __cpuinit rcu_spawn_one_boost_kthread(struct rcu_state *rsp,
+./kernel/rcutree_plugin.h:1157:static int __cpuinit rcu_spawn_one_cpu_kthread(int cpu)
+./kernel/rcutree_plugin.h:1243:static int __cpuinit rcu_spawn_one_node_kthread(struct rcu_state *rsp,
+./kernel/rcutree_plugin.h:1290:static void __cpuinit rcu_prepare_kthreads(int cpu)
+./kernel/rcutree_plugin.h:1347:static void __cpuinit rcu_prepare_kthreads(int cpu)
+./kernel/relay.c.orig:383:static int __cpuinit relay_hotcpu_callback(struct notifier_block *nb,
+./kernel/relay.c.orig:394:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./include/linux/init.h:38:#define __cpuinit        __section(.cpuinit.text) __cold notrace
+./include/linux/init.h:39:#define __cpuinitdata    __section(.cpuinit.data)
+./include/linux/init.h:40:#define __cpuinitconst   __section(.cpuinit.rodata)
+./include/linux/cpu.h:81:	static struct notifier_block fn##_nb __cpuinitdata =	\
+./include/linux/init.h.orig:39:#define __cpuinit        __section(.cpuinit.text) __cold notrace
+./include/linux/init.h.orig:40:#define __cpuinitdata    __section(.cpuinit.data)
+./include/linux/init.h.orig:41:#define __cpuinitconst   __section(.cpuinit.rodata)
+./include/linux/init.h.orig:47:#define __cpuinit        __cold
+./include/linux/init.h.orig:48:#define __cpuinitdata
+./include/linux/init.h.orig:49:#define __cpuinitconst
+./include/linux/init.h.orig:53:>>>>>>> e697aa5... cpuinit: turn __cpuinit into nops
+./include/linux/perf_event.h:898:	static struct notifier_block fn##_nb __cpuinitdata =		\
+./init/calibrate.c.orig:197:unsigned long __attribute__((weak)) __cpuinit calibrate_delay_is_known(void)
+./init/calibrate.c.orig:208:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./arch/sparc/kernel/trampoline_64.S:35:	/* XXX __cpuinit this thing XXX */
+./arch/x86/kernel/apic/apic.c:2346:static const __cpuinitconst struct dmi_system_id multi_dmi_table[] = {
+./arch/x86/kernel/cpu/intel_cacheinfo.c:40:static const struct _cache_table __cpuinitconst cache_table[] =
+./arch/x86/kernel/cpu/intel_cacheinfo.c:206:static const unsigned short __cpuinitconst assocs[] = {
+./arch/x86/kernel/cpu/intel_cacheinfo.c:220:static const unsigned char __cpuinitconst levels[] = { 1, 1, 2, 3 };
+./arch/x86/kernel/cpu/intel_cacheinfo.c:221:static const unsigned char __cpuinitconst types[] = { 1, 2, 3, 3 };
+./arch/x86/kernel/cpu/mcheck/mce.c:1961:__cpuinitdata
+./arch/x86/kernel/cpu/centaur.c:491:static const struct cpu_dev __cpuinitconst centaur_cpu_dev = {
+./arch/x86/kernel/cpu/cyrix.c:64:static const char __cpuinitconst Cx86_model[][9] = {
+./arch/x86/kernel/cpu/cyrix.c:68:static const char __cpuinitconst Cx486_name[][5] = {
+./arch/x86/kernel/cpu/cyrix.c:72:static const char __cpuinitconst Cx486S_name[][4] = {
+./arch/x86/kernel/cpu/cyrix.c:75:static const char __cpuinitconst Cx486D_name[][4] = {
+./arch/x86/kernel/cpu/cyrix.c:79:static const char __cpuinitconst cyrix_model_mult1[] = "12??43";
+./arch/x86/kernel/cpu/cyrix.c:80:static const char __cpuinitconst cyrix_model_mult2[] = "12233445";
+./arch/x86/kernel/cpu/cyrix.c:443:static const struct cpu_dev __cpuinitconst cyrix_cpu_dev = {
+./arch/x86/kernel/cpu/cyrix.c:454:static const struct cpu_dev __cpuinitconst nsc_cpu_dev = {
+./arch/x86/kernel/cpu/scattered.c:33:	static const struct cpuid_bit __cpuinitconst cpuid_bits[] = {
+./arch/x86/kernel/cpu/intel.c:494:static const struct cpu_dev __cpuinitconst intel_cpu_dev = {
+./arch/x86/kernel/cpu/scattered.c.orig:34:	static const struct cpuid_bit __cpuinitconst cpuid_bits[] = {
+./arch/x86/kernel/cpu/scattered.c.orig:39:>>>>>>> 021cd80... cpuinit: get rid of __cpuinit, manual fixups
+./arch/x86/kernel/cpu/transmeta.c:101:static const struct cpu_dev __cpuinitconst transmeta_cpu_dev = {
+./arch/x86/kernel/cpu/amd.c:735:static const struct cpu_dev __cpuinitconst amd_cpu_dev = {
+./arch/x86/kernel/cpu/umc.c:11:static const struct cpu_dev __cpuinitconst umc_cpu_dev = {
+./arch/x86/kernel/cpu/common.c:81:static const struct cpu_dev __cpuinitconst default_cpu = {
+./arch/x86/kernel/cpu/common.c:289:static const struct cpuid_dependent_feature __cpuinitconst
+./arch/x86/kernel/cpu/common.c:335:static const char *__cpuinit table_lookup_model(struct cpuinfo_x86 *c)
+./arch/x86/kernel/cpu/common.c:385:static const struct cpu_dev *__cpuinitdata cpu_devs[X86_VENDOR_NUM] = {};
+./arch/x86/kernel/cpu/common.c:931:static const struct msr_range msr_range_array[] __cpuinitconst = {
+./arch/x86/platform/mrst/mrst.c:68:__cpuinitdata enum mrst_timer_options mrst_timer_options;
+./arch/x86/mm/mmio-mod.c:413:/* __ref because leave_uniprocessor calls cpu_up which is __cpuinit,
+./arch/arm/kernel/smp.c.orig:171:static void __cpuinit smp_store_cpu_info(unsigned int cpuid)
+./arch/arm/kernel/smp.c.orig:178:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./arch/arm/kernel/smp.c.orig:188:asmlinkage void __cpuinit secondary_start_kernel(void)
+./arch/arm/kernel/smp.c.orig:195:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./arch/arm/kernel/perf_event.c.orig:649:static int __cpuinit pmu_cpu_notify(struct notifier_block *b,
+./arch/arm/kernel/perf_event.c.orig:659:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./arch/arm/kernel/perf_event.c.orig:709:static struct notifier_block __cpuinitdata pmu_cpu_notifier = {
+./arch/arm/kernel/arch_timer.c.orig:375:static struct local_timer_ops arch_timer_ops __cpuinitdata = {
+./arch/arm/mach-msm/acpuclock-8x60.c.orig:983:static struct notifier_block __cpuinitdata acpuclock_cpu_notifier = {
+./arch/arm/mach-msm/platsmp.c.orig:133:static int __cpuinit release_secondary(unsigned int cpu)
+./arch/arm/mach-msm/platsmp.c.orig:161:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./arch/arm/mach-msm/acpuclock-krait.c.orig:911:static struct notifier_block __cpuinitdata acpuclk_cpu_notifier = {
+./arch/powerpc/kernel/cacheinfo.c:143:static struct cache *__cpuinit new_cache(int type, int level, struct device_node *ofnode)
+./arch/powerpc/kernel/cacheinfo.c:327:static struct cache *__cpuinit cache_do_one_devnode_unified(struct device_node *node, int level)
+./arch/powerpc/kernel/cacheinfo.c:338:static struct cache *__cpuinit cache_do_one_devnode_split(struct device_node *node, int level)
+./arch/powerpc/kernel/cacheinfo.c:360:static struct cache *__cpuinit cache_do_one_devnode(struct device_node *node, int level)
+./arch/powerpc/kernel/cacheinfo.c:372:static struct cache *__cpuinit cache_lookup_or_instantiate(struct device_node *node, int level)
+./arch/powerpc/kernel/cacheinfo.c:426:static struct cache *__cpuinit cache_chain_instantiate(unsigned int cpu_id)
+./arch/powerpc/kernel/cacheinfo.c:451:static struct cache_dir *__cpuinit cacheinfo_create_cache_dir(unsigned int cpu_id)
+./Documentation/cpu-hotplug.txt:246:	static int __cpuinit foobar_cpu_callback(struct notifier_block *nfb,
+./Documentation/cpu-hotplug.txt:264:	static struct notifier_block __cpuinitdata foobar_cpu_notifer =
+Binary file ./.git/objects/pack/pack-04b52429277bf638c6d36547e08d1cf2fa879353.pack matches
+./.git/COMMIT_EDITMSG:1:cpuinit: get rid of __cpuinit, sixth regexp
+./.git/COMMIT_EDITMSG:5:find -name "*.c" | xargs sed -i "s/^__cpuinit //g"
+./.git/logs/refs/heads/exp:2:f858a3c0a5dd19cedba56dce254a97b0ac5423b7 90800482a10c315c2f4f12113405ea9528a3327f Bryan Smith <zarboz@gmail.com> 1374977078 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, first regexp
+./.git/logs/refs/heads/exp:3:90800482a10c315c2f4f12113405ea9528a3327f 63a39ee95bf2e15b843affa7960bcc29745aa325 Bryan Smith <zarboz@gmail.com> 1374977101 -0600	cherry-pick: cpuinit: get rid of __cpuinit, second regexp
+./.git/logs/refs/heads/exp:4:63a39ee95bf2e15b843affa7960bcc29745aa325 539000abd8331d6c77040ec19de31efb5cd6e0d4 Bryan Smith <zarboz@gmail.com> 1374977114 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, third regexp
+./.git/logs/refs/heads/exp:5:539000abd8331d6c77040ec19de31efb5cd6e0d4 c326b9ba15c1b314e22a42d5beb7ed16e36af87e Bryan Smith <zarboz@gmail.com> 1374977140 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, fourth regexp
+./.git/logs/refs/heads/exp:6:c326b9ba15c1b314e22a42d5beb7ed16e36af87e 80d42eb896360a10408cc7aa049626be64fe9d54 Bryan Smith <zarboz@gmail.com> 1374977152 -0600	cherry-pick: cpuinit: get rid of __cpuinit, fifth regexp
+./.git/logs/refs/heads/exp:7:80d42eb896360a10408cc7aa049626be64fe9d54 5554b1ef575d2b4abc1de7ccd34833f2226b11da Bryan Smith <zarboz@gmail.com> 1374977158 -0600	cherry-pick: cpuinit: get rid of __cpuinit, sixth regexp
+./.git/logs/refs/heads/exp:8:5554b1ef575d2b4abc1de7ccd34833f2226b11da 4aada613c2702f68462652f14e74821ca83f4114 Bryan Smith <zarboz@gmail.com> 1374977174 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, manual fixups
+./.git/logs/refs/heads/exp:9:4aada613c2702f68462652f14e74821ca83f4114 625df458b4e2f669bdc59456a5c99e7d26dd36ec Bryan Smith <zarboz@gmail.com> 1374977191 -0600	commit (cherry-pick): cpuinit: turn __cpuinit into nops
+./.git/logs/refs/heads/exp:11:1823406e43b3bfbb16944444845a78b2c2c0175f 0867520b973e437610c0ef3f9634038d58815f5c Bryan Smith <zarboz@gmail.com> 1374977283 -0600	commit (cherry-pick): revert hacks for the previous misuse of __cpuinit for hotplug only functions
+./.git/logs/refs/heads/exp:20:f858a3c0a5dd19cedba56dce254a97b0ac5423b7 3ad831c8122a0281a381f06ae6bee5c286cd130b Bryan Smith <zarboz@gmail.com> 1374977616 -0600	commit: cpuinit: get rid of __cpuinit, first regexp
+./.git/logs/refs/heads/exp:21:3ad831c8122a0281a381f06ae6bee5c286cd130b bfa6e2c571e58a0b09afbf5df920ae368fe2f410 Bryan Smith <zarboz@gmail.com> 1374977711 -0600	commit: cpuinit: get rid of __cpuinit, second regexp
+./.git/logs/refs/heads/exp:22:bfa6e2c571e58a0b09afbf5df920ae368fe2f410 dc0e8e52abf8c3635ed62728073efe092ae10a73 Bryan Smith <zarboz@gmail.com> 1374977795 -0600	commit: cpuinit: get rid of __cpuinit, third regexp
+./.git/logs/refs/heads/exp:23:dc0e8e52abf8c3635ed62728073efe092ae10a73 5a4e09a08973bafbc443f9144da57fe66d6f8fd0 Bryan Smith <zarboz@gmail.com> 1374977855 -0600	commit: cpuinit: get rid of __cpuinit, fourth regexp
+./.git/logs/refs/heads/exp:24:5a4e09a08973bafbc443f9144da57fe66d6f8fd0 2d00f08f288c688c77f365d8106da47bec3d0378 Bryan Smith <zarboz@gmail.com> 1374977965 -0600	commit: cpuinit: get rid of __cpuinit, fifth regexp
+./.git/logs/refs/heads/exp:25:2d00f08f288c688c77f365d8106da47bec3d0378 bb7e988883b68f8933d181db29400dff4e3a1eae Bryan Smith <zarboz@gmail.com> 1374978030 -0600	commit: cpuinit: get rid of __cpuinit, sixth regexp
+./.git/logs/HEAD:124:f858a3c0a5dd19cedba56dce254a97b0ac5423b7 90800482a10c315c2f4f12113405ea9528a3327f Bryan Smith <zarboz@gmail.com> 1374977078 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, first regexp
+./.git/logs/HEAD:125:90800482a10c315c2f4f12113405ea9528a3327f 63a39ee95bf2e15b843affa7960bcc29745aa325 Bryan Smith <zarboz@gmail.com> 1374977101 -0600	cherry-pick: cpuinit: get rid of __cpuinit, second regexp
+./.git/logs/HEAD:126:63a39ee95bf2e15b843affa7960bcc29745aa325 539000abd8331d6c77040ec19de31efb5cd6e0d4 Bryan Smith <zarboz@gmail.com> 1374977114 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, third regexp
+./.git/logs/HEAD:127:539000abd8331d6c77040ec19de31efb5cd6e0d4 c326b9ba15c1b314e22a42d5beb7ed16e36af87e Bryan Smith <zarboz@gmail.com> 1374977140 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, fourth regexp
+./.git/logs/HEAD:128:c326b9ba15c1b314e22a42d5beb7ed16e36af87e 80d42eb896360a10408cc7aa049626be64fe9d54 Bryan Smith <zarboz@gmail.com> 1374977152 -0600	cherry-pick: cpuinit: get rid of __cpuinit, fifth regexp
+./.git/logs/HEAD:129:80d42eb896360a10408cc7aa049626be64fe9d54 5554b1ef575d2b4abc1de7ccd34833f2226b11da Bryan Smith <zarboz@gmail.com> 1374977158 -0600	cherry-pick: cpuinit: get rid of __cpuinit, sixth regexp
+./.git/logs/HEAD:130:5554b1ef575d2b4abc1de7ccd34833f2226b11da 4aada613c2702f68462652f14e74821ca83f4114 Bryan Smith <zarboz@gmail.com> 1374977174 -0600	commit (cherry-pick): cpuinit: get rid of __cpuinit, manual fixups
+./.git/logs/HEAD:131:4aada613c2702f68462652f14e74821ca83f4114 625df458b4e2f669bdc59456a5c99e7d26dd36ec Bryan Smith <zarboz@gmail.com> 1374977191 -0600	commit (cherry-pick): cpuinit: turn __cpuinit into nops
+./.git/logs/HEAD:133:1823406e43b3bfbb16944444845a78b2c2c0175f 0867520b973e437610c0ef3f9634038d58815f5c Bryan Smith <zarboz@gmail.com> 1374977283 -0600	commit (cherry-pick): revert hacks for the previous misuse of __cpuinit for hotplug only functions
+./.git/logs/HEAD:142:f858a3c0a5dd19cedba56dce254a97b0ac5423b7 3ad831c8122a0281a381f06ae6bee5c286cd130b Bryan Smith <zarboz@gmail.com> 1374977616 -0600	commit: cpuinit: get rid of __cpuinit, first regexp
+./.git/logs/HEAD:143:3ad831c8122a0281a381f06ae6bee5c286cd130b bfa6e2c571e58a0b09afbf5df920ae368fe2f410 Bryan Smith <zarboz@gmail.com> 1374977711 -0600	commit: cpuinit: get rid of __cpuinit, second regexp
+./.git/logs/HEAD:144:bfa6e2c571e58a0b09afbf5df920ae368fe2f410 dc0e8e52abf8c3635ed62728073efe092ae10a73 Bryan Smith <zarboz@gmail.com> 1374977795 -0600	commit: cpuinit: get rid of __cpuinit, third regexp
+./.git/logs/HEAD:145:dc0e8e52abf8c3635ed62728073efe092ae10a73 5a4e09a08973bafbc443f9144da57fe66d6f8fd0 Bryan Smith <zarboz@gmail.com> 1374977855 -0600	commit: cpuinit: get rid of __cpuinit, fourth regexp
+./.git/logs/HEAD:146:5a4e09a08973bafbc443f9144da57fe66d6f8fd0 2d00f08f288c688c77f365d8106da47bec3d0378 Bryan Smith <zarboz@gmail.com> 1374977965 -0600	commit: cpuinit: get rid of __cpuinit, fifth regexp
+./.git/logs/HEAD:147:2d00f08f288c688c77f365d8106da47bec3d0378 bb7e988883b68f8933d181db29400dff4e3a1eae Bryan Smith <zarboz@gmail.com> 1374978030 -0600	commit: cpuinit: get rid of __cpuinit, sixth regexp
+./mm/vmstat.c.orig:972:static int __cpuinit vmstat_cpuup_callback(struct notifier_block *nfb,
+./mm/vmstat.c.orig:979:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./mm/vmstat.c.orig:1011:static struct notifier_block __cpuinitdata vmstat_notifier =
+./mm/vmscan.c.orig:2344:>>>>>>> 1595768... revert hacks for the previous misuse of __cpuinit for hotplug only functions
+./mm/slub.c.orig:3178:static int __cpuinit slab_cpuup_callback(struct notifier_block *nfb,
+./mm/slub.c.orig:3185:>>>>>>> 0e554f3... cpuinit: get rid of __cpuinit, first regexp
+./mm/slub.c.orig:3211:static struct notifier_block __cpuinitdata slab_notifier = {
