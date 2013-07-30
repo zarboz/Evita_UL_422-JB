@@ -194,19 +194,6 @@ static void firmware_free_data(const struct firmware *fw)
 #ifndef PAGE_KERNEL_RO
 #define PAGE_KERNEL_RO PAGE_KERNEL
 #endif
-/**
- * firmware_loading_store - set value in the 'loading' control file
- * @dev: device pointer
- * @attr: device attribute pointer
- * @buf: buffer to scan for loading control value
- * @count: number of bytes in @buf
- *
- *	The relevant values are:
- *
- *	 1: Start a load, discarding any previous partial load.
- *	 0: Conclude the load and hand the data to the driver code.
- *	-1: Conclude the load with an error and discard any written data.
- **/
 static ssize_t firmware_loading_store(struct device *dev,
 				      struct device_attribute *attr,
 				      const char *buf, size_t count)
@@ -351,18 +338,6 @@ static int fw_realloc_buffer(struct firmware_priv *fw_priv, int min_size)
 	return 0;
 }
 
-/**
- * firmware_data_write - write method for firmware
- * @filp: open sysfs file
- * @kobj: kobject for the device
- * @bin_attr: bin_attr structure
- * @buffer: buffer being written
- * @offset: buffer offset for write in total data store area
- * @count: buffer size
- *
- *	Data written to the 'data' attribute will be later handed to
- *	the driver as a firmware image.
- **/
 static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,
 				   struct bin_attribute *bin_attr,
 				   char *buffer, loff_t offset, size_t count)

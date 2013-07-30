@@ -474,16 +474,6 @@ int _regmap_write(struct regmap *map, unsigned int reg,
 	}
 }
 
-/**
- * regmap_write(): Write a value to a single register
- *
- * @map: Register map to write to
- * @reg: Register to write to
- * @val: Value to be written
- *
- * A value of zero will be returned on success, a negative errno will
- * be returned in error cases.
- */
 int regmap_write(struct regmap *map, unsigned int reg, unsigned int val)
 {
 	int ret;
@@ -498,22 +488,6 @@ int regmap_write(struct regmap *map, unsigned int reg, unsigned int val)
 }
 EXPORT_SYMBOL_GPL(regmap_write);
 
-/**
- * regmap_raw_write(): Write raw values to one or more registers
- *
- * @map: Register map to write to
- * @reg: Initial register to write to
- * @val: Block of data to be written, laid out for direct transmission to the
- *       device
- * @val_len: Length of data pointed to by val.
- *
- * This function is intended to be used for things like firmware
- * download where a large block of data needs to be transferred to the
- * device.  No formatting will be done on the data provided.
- *
- * A value of zero will be returned on success, a negative errno will
- * be returned in error cases.
- */
 int regmap_raw_write(struct regmap *map, unsigned int reg,
 		     const void *val, size_t val_len)
 {
@@ -529,20 +503,6 @@ int regmap_raw_write(struct regmap *map, unsigned int reg,
 }
 EXPORT_SYMBOL_GPL(regmap_raw_write);
 
-/*
- * regmap_bulk_write(): Write multiple registers to the device
- *
- * @map: Register map to write to
- * @reg: First register to be write from
- * @val: Block of data to be written, in native register size for device
- * @val_count: Number of registers to write
- *
- * This function is intended to be used for writing a large block of
- * data to be device either in single transfer or multiple transfer.
- *
- * A value of zero will be returned on success, a negative errno will
- * be returned in error cases.
- */
 int regmap_bulk_write(struct regmap *map, unsigned int reg, const void *val,
 		     size_t val_count)
 {

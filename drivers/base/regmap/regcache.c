@@ -225,7 +225,7 @@ int regcache_sync(struct regmap *map)
 	const char *name;
 	unsigned int bypass;
 
-	BUG_ON(!map || !map->cache_ops || !map->cache_ops->sync);
+	BUG_ON(!map->cache_ops || !map->cache_ops->sync);
 
 	mutex_lock(&map->lock);
 	
@@ -272,7 +272,7 @@ int regcache_sync_region(struct regmap *map, unsigned int min,
 	const char *name;
 	unsigned int bypass;
 
-	BUG_ON(!map || !map->cache_ops || !map->cache_ops->sync);
+	BUG_ON(!map->cache_ops || !map->cache_ops->sync);
 
 	mutex_lock(&map->lock);
 
@@ -299,18 +299,6 @@ out:
 }
 EXPORT_SYMBOL_GPL(regcache_sync_region);
 
-/**
- * regcache_cache_only: Put a register map into cache only mode
- *
- * @map: map to configure
- * @cache_only: flag if changes should be written to the hardware
- *
- * When a register map is marked as cache only writes to the register
- * map API will only update the register cache, they will not cause
- * any hardware changes.  This is useful for allowing portions of
- * drivers to act as though the device were functioning as normal when
- * it is disabled for power saving reasons.
- */
 void regcache_cache_only(struct regmap *map, bool enable)
 {
 	mutex_lock(&map->lock);
@@ -329,17 +317,6 @@ void regcache_mark_dirty(struct regmap *map)
 }
 EXPORT_SYMBOL_GPL(regcache_mark_dirty);
 
-/**
- * regcache_cache_bypass: Put a register map into cache bypass mode
- *
- * @map: map to configure
- * @cache_bypass: flag if changes should not be written to the hardware
- *
- * When a register map is marked with the cache bypass option, writes
- * to the register map API will only update the hardware and not the
- * the cache directly.  This is useful when syncing the cache back to
- * the hardware.
- */
 void regcache_cache_bypass(struct regmap *map, bool enable)
 {
 	mutex_lock(&map->lock);
