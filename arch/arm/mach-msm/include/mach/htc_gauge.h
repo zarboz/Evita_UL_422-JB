@@ -21,7 +21,6 @@ enum htc_gauge_event {
 	HTC_GAUGE_EVENT_EOC,
 	HTC_GAUGE_EVENT_BATT_REMOVED,
 	HTC_GAUGE_EVENT_OVERLOAD,
-	HTC_GAUGE_EVENT_EOC_STOP_CHG,
 };
 
 struct htc_gauge {
@@ -43,10 +42,9 @@ struct htc_gauge {
 	int (*register_lower_voltage_alarm_notifier)(void (*callback)(int));
 	int (*enable_lower_voltage_alarm)(int enable);
 	int (*set_lower_voltage_alarm_threshold)(int thres_mV);
-	int (*set_chg_ovp)(int is_ovp);
 };
 
 int htc_gauge_event_notify(enum htc_gauge_event);
 int htc_gauge_get_battery_voltage(int *result);
-int htc_gauge_set_chg_ovp(int is_ovp);
+
 #endif
