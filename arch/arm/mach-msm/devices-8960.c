@@ -85,8 +85,6 @@
 #define MSM_UART6DM_PHYS	(MSM_GSBI6_PHYS + 0x40000)
 #define MSM_UART8DM_PHYS	(MSM_GSBI8_PHYS + 0x40000)
 #define MSM_UART9DM_PHYS	(MSM_GSBI9_PHYS + 0x40000)
-#define MSM_UART10DM_PHYS	(MSM_GSBI10_PHYS + 0x40000)
-#define MSM_UART12DM_PHYS	0x12490000
 
 #define MSM_GSBI1_QUP_PHYS	(MSM_GSBI1_PHYS + 0x80000)
 #define MSM_GSBI2_QUP_PHYS	(MSM_GSBI2_PHYS + 0x80000)
@@ -498,33 +496,6 @@ struct platform_device msm8960_device_uart_gsbi5 = {
 	.resource	= resources_uart_gsbi5,
 };
 
-static struct resource resources_uart_gsbi10[] = {
-	{
-		.start	= GSBI10_UARTDM_IRQ,
-		.end	= GSBI10_UARTDM_IRQ,
-		.flags	= IORESOURCE_IRQ,
-	},
-	{
-		.start	= MSM_UART10DM_PHYS,
-		.end	= MSM_UART10DM_PHYS + PAGE_SIZE - 1,
-		.name	= "uartdm_resource",
-		.flags	= IORESOURCE_MEM,
-	},
-	{
-		.start	= MSM_GSBI10_PHYS,
-		.end	= MSM_GSBI10_PHYS + PAGE_SIZE - 1,
-		.name	= "gsbi_resource",
-		.flags	= IORESOURCE_MEM,
-	},
-};
-
-struct platform_device msm8960_device_uart_gsbi10 = {
-	.name	= "msm_serial_hsl",
-	.id	= 2,
-	.num_resources	= ARRAY_SIZE(resources_uart_gsbi10),
-	.resource	= resources_uart_gsbi10,
-};
-
 static struct msm_serial_hslite_platform_data uart_gsbi8_pdata = {
 	.line		= 0,
 };
@@ -556,36 +527,6 @@ struct platform_device msm8960_device_uart_gsbi8 = {
 	.resource	   = resources_uart_gsbi8,
 	.dev.platform_data = &uart_gsbi8_pdata,
 };
-
-#ifdef CONFIG_SERIAL_IRDA
-static struct resource resources_uart_gsbi12[] = {
-	{
-		.start	= GSBI12_UARTDM_IRQ,
-		.end	= GSBI12_UARTDM_IRQ,
-		.flags	= IORESOURCE_IRQ,
-	},
-	{
-		.start	= MSM_UART12DM_PHYS,
-		.end	= MSM_UART12DM_PHYS + PAGE_SIZE - 1,
-		.name	= "uartdm_resource",
-		.flags	= IORESOURCE_MEM,
-	},
-
-	{
-		.start	= MSM_GSBI12_PHYS,
-		.end	= MSM_GSBI12_PHYS + PAGE_SIZE - 1,
-		.name	= "gsbi_resource",
-		.flags	= IORESOURCE_MEM,
-	},
-};
-
-struct platform_device msm8960_device_uart_gsbi12 = {
-	.name	= "msm_serial_irda",
-	.id	= 2,
-	.num_resources	= ARRAY_SIZE(resources_uart_gsbi12),
-	.resource	= resources_uart_gsbi12,
-};
-#endif
 
 #ifdef CONFIG_MSM_BUS_SCALING
 static struct msm_bus_vectors vidc_init_vectors[] = {
@@ -2299,19 +2240,11 @@ struct msm_dai_auxpcm_pdata auxpcm_pdata = {
 	.mode_16k = {
 		.mode = AFE_PCM_CFG_MODE_PCM,
 		.sync = AFE_PCM_CFG_SYNC_INT,
-#ifdef CONFIG_BT_WBS_BRCM
-		.frame = AFE_PCM_CFG_FRM_128BPF,
-#else
 		.frame = AFE_PCM_CFG_FRM_256BPF,
-#endif
 		.quant = AFE_PCM_CFG_QUANT_LINEAR_NOPAD,
 		.slot = 0,
 		.data = AFE_PCM_CFG_CDATAOE_MASTER,
-#ifdef CONFIG_BT_WBS_BRCM
-		.pcm_clk_rate = 2048000,
-#else
 		.pcm_clk_rate = 4096000,
-#endif
 	}
 };
 
