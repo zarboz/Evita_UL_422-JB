@@ -218,7 +218,7 @@ static struct msm_camera_sensor_flash_src msm_flash_src = {
 	.camera_flash = flashlight_control,
 };
 #endif
-#ifdef CONFIG_RAWCHIPII
+#ifdef CONFIG_RAWCHIP
 static int elite_use_ext_1v2(void)
 {
 	if (system_rev >= 1) 
