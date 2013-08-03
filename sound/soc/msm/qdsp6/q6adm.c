@@ -784,7 +784,7 @@ fail_cmd:
 
 
 int adm_multi_ch_copp_open(int port_id, int path, int rate, int channel_mode,
-				int topology)
+int topology, int perfmode)
 {
 	struct adm_multi_ch_copp_open_command open;
 	int ret = 0;

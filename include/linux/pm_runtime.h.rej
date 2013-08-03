@@ -1,0 +1,11 @@
+--- include/linux/pm_runtime.h	2013-06-24 03:50:42.000000000 -0500
++++ include/linux/pm_runtime.h	2013-08-02 00:37:50.000000000 -0500
+@@ -84,7 +84,7 @@
+ 
+ 	
+ 	
+-	#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++	#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 	{
+ 		extern unsigned int get_radio_flag(void);
+ 		if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {

@@ -1,0 +1,12 @@
+--- sound/soc/msm/msm-pcm-q6.c	2013-06-24 03:50:47.000000000 -0500
++++ sound/soc/msm/msm-pcm-q6.c	2013-08-02 00:38:03.000000000 -0500
+@@ -714,6 +718,9 @@
+ 		event.event_func = msm_pcm_route_event_handler;
+ 		event.priv_data = (void*) prtd;
+ 		msm_pcm_routing_reg_phy_stream_v2(soc_prtd->dai_link->be_id,
++				
++						prtd->audio_client->perf_mode,
++				
+ 						  prtd->session_id,
+ 						  substream->stream, event);
+ 	}

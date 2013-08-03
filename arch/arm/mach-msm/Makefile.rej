@@ -1,0 +1,23 @@
+--- arch/arm/mach-msm/Makefile	2013-06-24 03:50:48.000000000 -0500
++++ arch/arm/mach-msm/Makefile	2013-08-02 00:38:05.000000000 -0500
+@@ -294,13 +296,20 @@
+ board-elite-all-objs += board-elite.o board-elite-gpiomux.o devices-8960.o board-8960-storage.o
+ # board-monarudo-all-objs += board-monarudo.o board-monarudo-pmic.o board-monarudo-storage.o board-monarudo-gpiomux.o board-monarudo-display.o board-monarudo-gpu.o board-monarudo-keypad.o board-monarudo-wifi.o
+ board-monarudo-all-objs += board-monarudo.o board-monarudo-pmic.o board-monarudo-storage.o board-monarudo-gpiomux.o board-monarudo-display.o board-monarudo-gpu.o board-monarudo-keypad.o board-monarudo-wifi.o  board-monarudo-audio.o
++board-deluxe_j-all-objs += board-deluxe_j.o board-deluxe_j-pmic.o board-deluxe_j-storage.o board-deluxe_j-gpiomux.o board-deluxe_j-keypad.o board-deluxe_j-wifi.o board-deluxe_j-audio.o
++board-impression_j-all-objs += board-impression_j.o board-impression_j-pmic.o board-impression_j-storage.o board-impression_j-gpiomux.o board-impression_j-keypad.o board-impression_j-wifi.o board-impression_j-audio.o
+ board-m7-all-objs += board-m7.o board-m7-pmic.o board-m7-storage.o board-m7-gpiomux.o board-m7-keypad.o board-m7-wifi.o board-m7-audio.o
+ 
+ ifdef CONFIG_FB_MSM
++board-deluxe_j-all-objs += board-deluxe_j-display.o board-deluxe_j-gpu.o
++board-impression_j-all-objs += board-impression_j-display.o board-impression_j-gpu.o
+ board-m7-all-objs += board-m7-display.o board-m7-gpu.o
+ endif
++
+ ifdef CONFIG_MSM_CAMERA
+ board-monarudo-all-objs += board-monarudo-camera.o
++board-deluxe_j-all-objs += board-deluxe_j-camera.o
++board-impression_j-all-objs += board-impression_j-camera.o
+ board-m7-all-objs += board-m7-camera.o
+ endif
+ obj-$(CONFIG_MACH_MSM8960_SIM) += board-8960-all.o board-8960-regulator.o

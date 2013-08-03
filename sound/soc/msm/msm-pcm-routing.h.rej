@@ -1,0 +1,10 @@
+--- sound/soc/msm/msm-pcm-routing.h	2013-06-24 03:50:43.000000000 -0500
++++ sound/soc/msm/msm-pcm-routing.h	2013-08-02 00:37:55.000000000 -0500
+@@ -125,6 +126,7 @@
+ };
+ 
+ void msm_pcm_routing_reg_phy_stream_v2(int fedai_id,
++						bool perf_mode,
+ 				       int dspst_id, int stream_type,
+ 				       struct msm_pcm_routing_evt event_info);
+ 

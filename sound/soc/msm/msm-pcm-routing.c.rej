@@ -1,0 +1,142 @@
+--- sound/soc/msm/msm-pcm-routing.c	2013-06-24 03:50:47.000000000 -0500
++++ sound/soc/msm/msm-pcm-routing.c	2013-08-02 00:38:03.000000000 -0500
+@@ -46,7 +46,9 @@
+ 	unsigned int  sample_rate;
+ 	unsigned int  channel;
+ 	unsigned int  format;
++	
+ 	bool perf_mode;
++	
+ };
+ 
+ struct msm_pcm_routing_fdai_data {
+@@ -384,13 +394,26 @@
+ 				bit_width = 24;
+ 
+ 			if ((stream_type == SNDRV_PCM_STREAM_PLAYBACK) &&
++				
++				((channels == 1) || (channels == 2)) &&
++				msm_bedais[i].perf_mode) {
++				pr_debug("%s configure COPP to lowlatency mode",
++								__func__);
++				
++				adm_multi_ch_copp_open(msm_bedais[i].port_id,
++				path_type,
++				msm_bedais[i].sample_rate,
++				msm_bedais[i].channel,
++				topology, msm_bedais[i].perf_mode);
++			}else if((stream_type == SNDRV_PCM_STREAM_PLAYBACK) &&
++				
+ 				(channels > 0))
+ 				adm_multi_ch_copp_open_v2(msm_bedais[i].port_id,
+ 				path_type,
+ 				msm_bedais[i].sample_rate,
+ 				msm_bedais[i].channel,
+ 				topology,
+-				bit_width);
++				bit_width, msm_bedais[i].perf_mode);
+ 			else
+ 				adm_open(msm_bedais[i].port_id,
+ 				path_type,
+@@ -404,17 +427,28 @@
+ 			srs_send_params(srs_port_id, 1, 0);
+ 		}
+ 	}
+-	if (payload.num_copps)
+-		adm_matrix_map(dspst_id, path_type,
+-			payload.num_copps, payload.copp_ids, 0);
+-
++#ifdef CONFIG_MSM8960_ONLY
++	if ( msm_bedais[2].active && ((fedai_id == 3)||(fedai_id == 6)) && (stream_type == SNDRV_PCM_STREAM_PLAYBACK) ){
++		skip_adm_matrix_map = true;
++	}
++	if ( skip_adm_matrix_map ){
++		pr_info("%s: skip redundant adm_matrix_map for session_id %d fedai_id %d \n", __func__,dspst_id,fedai_id );
++	}else{
++#endif
++		if (payload.num_copps)
++			adm_matrix_map(dspst_id, path_type,
++				payload.num_copps, payload.copp_ids, 0);
++#ifdef CONFIG_MSM8960_ONLY
++	}
++#endif
+ 	mutex_unlock(&routing_lock);
+ }
+ void msm_pcm_routing_reg_phy_stream_v2(int fedai_id,
++						bool perf_mode,
+ 				       int dspst_id, int stream_type,
+ 				       struct msm_pcm_routing_evt event_info)
+ {
+-	msm_pcm_routing_reg_phy_stream(fedai_id, dspst_id, stream_type);
++	msm_pcm_routing_reg_phy_stream(fedai_id, perf_mode, dspst_id, stream_type);
+ 
+ 	if (stream_type == SNDRV_PCM_STREAM_PLAYBACK)
+ 		fe_dai_map[fedai_id][SESSION_TYPE_RX].event_info = event_info;
+@@ -533,14 +567,27 @@
+ 
+ 			if (msm_bedais[reg].format == SNDRV_PCM_FORMAT_S24_LE)
+ 				bit_width = 24;
+-			if ((session_type == SESSION_TYPE_RX)
+-					&& (channels > 0))
++			if ((session_type == SESSION_TYPE_RX) &&
++			
++						((channels == 1) || (channels == 2))
++						&& msm_bedais[reg].perf_mode) {
++				adm_multi_ch_copp_open_v2(msm_bedais[reg].port_id,
++				path_type,
++				msm_bedais[reg].sample_rate,
++				channels,
++				topology, bit_width,
++				msm_bedais[reg].perf_mode);
++				pr_debug("%s:configure COPP to lowlatency mode",
++											 __func__);
++			}else if((session_type == SESSION_TYPE_RX) &&
++			
++					 (channels > 0))
+ 				adm_multi_ch_copp_open_v2(
+ 				msm_bedais[reg].port_id, path_type,
+ 				msm_bedais[reg].sample_rate,
+ 				channels,
+ 				topology,
+-				bit_width);
++				bit_width, msm_bedais[reg].perf_mode);
+ 			else
+ 				adm_open(msm_bedais[reg].port_id,
+ 				path_type,
+@@ -2806,11 +2923,7 @@
+ 	{"SEC_I2S_RX", NULL, "SEC_I2S_DL_HL"},
+ 	{"PRI_I2S_RX", NULL, "PRI_I2S_DL_HL"},
+ 	{"PRI_I2S_UL_HL", NULL, "PRI_I2S_TX"},
+-#if defined(CONFIG_MACH_M7_DXG)  || \
+-    defined(CONFIG_MACH_DUMMY) || \
+-    defined(CONFIG_MACH_DUMMY) || \
+-    defined(CONFIG_MACH_DUMMY) || \
+-    defined(CONFIG_MACH_T6_DXG)
++#if defined(CONFIG_ARCH_DUMMY) || defined(CONFIG_ARCH_DUMMY) || defined(CONFIG_ARCH_DUMMY)
+ 	
+ 	
+ 	
+@@ -3083,7 +3199,10 @@
+ 			   bedai->sample_rate,
+ 			   channels,
+ 			   DEFAULT_COPP_TOPOLOGY,
+-			   bit_width);
++			   bit_width,
++			   
++			   bedai->perf_mode);
++			   
+ #ifdef CONFIG_MSM8960_ONLY
+ 			} else if ((capture)
+ 			   && (channels > 2))
+@@ -3095,7 +3214,10 @@
+ 			   path_type,
+ 			   bedai->sample_rate,
+ 			   channels,
+-			   topology);
++			   topology,
++			   
++			   bedai->perf_mode);
++			   
+ 			else
+ 				adm_open(bedai->port_id,
+ 				path_type,
