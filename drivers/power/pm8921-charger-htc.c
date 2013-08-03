@@ -310,7 +310,6 @@ static int thermal_mitigation;
 static int usb_ovp_disable;
 static int bat_temp_ok_prev = -1;
 static int eoc_count; 
-static int eoc_count_by_curr; 
 
 static struct pm8921_chg_chip *the_chip;
 
@@ -1798,7 +1797,7 @@ int pm8921_charger_get_attr_text(char *buf, int size)
 			"mitigation_level(int): %d;\n", thermal_mitigation);
 
 	len += scnprintf(buf + len, size - len,
-			"eoc_count/by_curr(int): %d/%d;\n", eoc_count, eoc_count_by_curr);
+			"eoc_count(int): %d;\n", eoc_count);
 
 	get_reg((void *)CHG_CNTRL, &val);
 	len += scnprintf(buf + len, size - len,
@@ -1994,7 +1993,7 @@ static void handle_usb_present_change(struct pm8921_chg_chip *chip,
 				pr_err("Failed to set auto_enable rc=%d\n", rc);
 
 			is_batt_full = false;
-			eoc_count = eoc_count_by_curr = 0;
+			eoc_count = 0;
 			is_ac_safety_timeout = is_ac_safety_timeout_twice = false;
 			is_cable_remove = true;
 
@@ -3217,7 +3216,7 @@ static void unplug_check_worker(struct work_struct *work)
 			pr_info("too much ovp_trial_count=%d\n", ovp_trial_count);
 			ovp_trial_count = 0;
 		}
-		unplug_ovp_fet_open(chip);
+		schedule_work(&chip->unplug_ovp_fet_open_work);
 	}
 
 	if (!(reg_loop & VIN_ACTIVE_BIT) && (active_path & USB_ACTIVE_BIT) &&
@@ -3336,7 +3335,8 @@ static irqreturn_t batttemp_cold_irq_handler(int irq, void *data)
 static irqreturn_t chg_gone_irq_handler(int irq, void *data)
 {
 	struct pm8921_chg_chip *chip = data;
-	int chg_gone, usb_chg_plugged_in, dc_chg_plugged_in;
+	u8 reg;
+	int rc, chg_gone, usb_chg_plugged_in, dc_chg_plugged_in;
 
 	usb_chg_plugged_in = is_usb_chg_plugged_in(chip);
 	dc_chg_plugged_in = is_dc_chg_plugged_in(chip);
@@ -3345,6 +3345,13 @@ static irqreturn_t chg_gone_irq_handler(int irq, void *data)
 	pr_info("chg_gone=%d, usb_valid=%d, dc_valid=%d, fsm=%d\n",
 			chg_gone, usb_chg_plugged_in, dc_chg_plugged_in,
 			pm_chg_get_fsm_state(data));
+	rc = pm8xxx_readb(chip->dev->parent, CHG_CNTRL_3, &reg);
+	if (rc)
+		pr_err("Failed to read CHG_CNTRL_3 rc=%d\n", rc);
+
+	if (reg & CHG_USB_SUSPEND_BIT)
+		return IRQ_HANDLED;
+	schedule_work(&chip->unplug_ovp_fet_open_work);
 
 	return IRQ_HANDLED;
 }
@@ -3626,8 +3633,8 @@ static void dump_all(int more)
 			health, present, charger_type, status, fsm,
 			ac_online, usb_online, dc_online,
 			iusb_ma, usb_target_ma, ovp, uvp, thermal_mitigation, eoc_count,
-			eoc_count_by_curr, vbatdet_low, is_ac_safety_timeout,
-			batt_charging_disabled, pwrsrc_disabled, is_batt_full,
+			vbatdet_low, is_ac_safety_timeout, batt_charging_disabled,
+			pwrsrc_disabled, is_batt_full,
 			temp_fault, the_chip->is_bat_warm, the_chip->is_bat_cool,
 			pm8xxx_adc_btm_is_warm(), pm8xxx_adc_btm_is_cool(),
 			ichg, vph_pwr, usbin, test_power_monitor, flag_keep_charge_on,
@@ -3810,15 +3817,12 @@ static int is_charging_finished(struct pm8921_chg_chip *chip)
 		}
 
 		
-		if (chip->term_current <= PM8921_CHG_ITERM_MAX_MA) {
-			rc = pm_chg_iterm_get(chip, &iterm_programmed);
+		rc = pm_chg_iterm_get(chip, &iterm_programmed);
 
-			if (rc) {
-				pr_err("couldnt read iterm rc = %d\n", rc);
-				return CHG_IN_PROGRESS;
-			}
-		} else
-			iterm_programmed = chip->term_current;
+		if (rc) {
+			pr_err("couldnt read iterm rc = %d\n", rc);
+			return CHG_IN_PROGRESS;
+		}
 
 		ichg_meas_ma = (get_prop_batt_current(chip)) / 1000;
 		pr_debug("iterm_programmed = %d ichg_meas_ma=%d\n",
@@ -3839,14 +3843,11 @@ static int is_charging_finished(struct pm8921_chg_chip *chip)
 
 
 	
-	if (chip->term_current <= PM8921_CHG_ITERM_MAX_MA) {
-		rc = pm_chg_iterm_get(chip, &iterm_programmed);
-		if (rc) {
-			pr_err("couldnt read iterm rc = %d\n", rc);
-			return CHG_IN_PROGRESS;
-		}
-	} else
-		iterm_programmed = chip->term_current;
+	rc = pm_chg_iterm_get(chip, &iterm_programmed);
+	if (rc) {
+		pr_err("couldnt read iterm rc = %d\n", rc);
+		return CHG_IN_PROGRESS;
+	}
 
 	ichg_meas_ma = (get_prop_batt_current(chip)) / 1000;
 	pr_debug("iterm_programmed = %d ichg_meas_ma=%d\n",
@@ -3889,14 +3890,13 @@ int pm_chg_program_vbatdet(struct pm8921_chg_chip *chip)
 
 #define CONSECUTIVE_COUNT	3
 #define EOC_STOP_CHG_COUNT	(CONSECUTIVE_COUNT + 180)
-#define EOC_STOP_CHG_BY_CURR_COUNT	(CONSECUTIVE_COUNT)
 #define CLEAR_FULL_STATE_BY_LEVEL_THR		90
 static void eoc_worker(struct work_struct *work)
 {
 	struct delayed_work *dwork = to_delayed_work(work);
 	struct pm8921_chg_chip *chip = container_of(dwork,
 				struct pm8921_chg_chip, eoc_work);
-	int end, soc = 0, ichg_meas_ma = 0;
+	int end, soc = 0;
 
 	if (!is_ac_safety_timeout)
 		pm_chg_failed_clear(chip, 1);
@@ -3907,7 +3907,7 @@ static void eoc_worker(struct work_struct *work)
 		pr_info("%s: End due to fast_chg=%d\n",
 				__func__, pm_chg_get_rt_status(chip, FASTCHG_IRQ));
 		is_batt_full = false;
-		eoc_count = eoc_count_by_curr = 0;
+		eoc_count = 0;
 		is_ac_safety_timeout_twice = false;
 		if (!flag_disable_wakelock)
 			wake_unlock(&chip->eoc_wake_lock);
@@ -3919,21 +3919,12 @@ static void eoc_worker(struct work_struct *work)
 
 	if (end == CHG_FINISHED) {
 		eoc_count++;
-		if (chip->eoc_ibat_thre_ma && (eoc_count > CONSECUTIVE_COUNT)) {
-			ichg_meas_ma = (get_prop_batt_current(chip)) / 1000;
-			if (ichg_meas_ma * -1 < chip->eoc_ibat_thre_ma)
-				eoc_count_by_curr++;
-			else
-				eoc_count_by_curr = 0;
-		}
 	} else {
-		eoc_count = eoc_count_by_curr = 0;
+		eoc_count = 0;
 	}
 
-	if ((!chip->eoc_ibat_thre_ma && (EOC_STOP_CHG_COUNT == eoc_count)) ||
-			(chip->eoc_ibat_thre_ma &&
-				(EOC_STOP_CHG_BY_CURR_COUNT == eoc_count_by_curr))) {
-		eoc_count = eoc_count_by_curr = 0;
+	if (EOC_STOP_CHG_COUNT == eoc_count) {
+		eoc_count = 0;
 		is_ac_safety_timeout_twice = false;
 		pm_chg_program_vbatdet(chip);
 		pm_chg_disable_auto_enable(chip, 1, BATT_CHG_DISABLED_BIT_EOC);
@@ -3984,7 +3975,7 @@ static void eoc_worker(struct work_struct *work)
 		soc = get_prop_batt_capacity(chip);
 		if (soc < CLEAR_FULL_STATE_BY_LEVEL_THR) {
 			is_batt_full = false;
-			eoc_count = eoc_count_by_curr = 0;
+			eoc_count = 0;
 			pr_info("%s: Clear is_batt_full & eoc_count due to"
 						" Overloading happened, soc=%d\n",
 						__func__, soc);
@@ -4599,13 +4590,11 @@ static int __devinit pm8921_chg_hw_init(struct pm8921_chg_chip *chip)
 		return rc;
 	}
 
-	if (chip->term_current <= PM8921_CHG_ITERM_MAX_MA) {
-		rc = pm_chg_iterm_set(chip, chip->term_current);
-		if (rc) {
-			pr_err("Failed to set term current to %d rc=%d\n",
-							chip->term_current, rc);
-			return rc;
-		}
+	rc = pm_chg_iterm_set(chip, chip->term_current);
+	if (rc) {
+		pr_err("Failed to set term current to %d rc=%d\n",
+						chip->term_current, rc);
+		return rc;
 	}
 
 	
@@ -5148,9 +5137,6 @@ static int __devinit pm8921_charger_probe(struct platform_device *pdev)
 	chip->dev = &pdev->dev;
 	chip->safety_time = pdata->safety_time;
 	chip->ttrkl_time = pdata->ttrkl_time;
-	chip->ichg_threshold_ua = pdata->ichg_threshold_ua;
-	chip->ichg_regulation_thr_ua
-		= pdata->ichg_regulation_thr_ua;
 	chip->update_time = pdata->update_time;
 	
 	chg_batt_param = htc_battery_cell_get_cur_cell_charger_cdata();
@@ -5223,6 +5209,8 @@ static int __devinit pm8921_charger_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&chip->recharge_check_work, recharge_check_worker);
 	INIT_DELAYED_WORK(&chip->vin_collapse_check_work,
 						vin_collapse_check_worker);
+	INIT_WORK(&chip->unplug_ovp_fet_open_work,
+					unplug_ovp_fet_open_worker);
 	INIT_DELAYED_WORK(&chip->unplug_check_work, unplug_check_worker);
 
 	INIT_DELAYED_WORK(&ext_charger_vbat_low_task, ext_charger_vbat_low_handler);
