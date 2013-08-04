@@ -39,7 +39,7 @@
 #define MAX_PRIME_CHECK_RETRY  3 
 
 static DEFINE_SPINLOCK(udc_lock);
-extern int USB_disabled;
+
 static const struct usb_endpoint_descriptor
 ctrl_endpt_out_desc = {
 	.bLength         = USB_DT_ENDPOINT_SIZE,
@@ -212,17 +212,14 @@ static int hw_device_init(void __iomem *base)
 }
 static int hw_device_reset(struct ci13xxx *udc)
 {
-	int delay_count = 25; 
-
 	
 	hw_cwrite(CAP_ENDPTFLUSH, ~0, ~0);
 	hw_cwrite(CAP_USBCMD, USBCMD_RS, 0);
 
 	hw_cwrite(CAP_USBCMD, USBCMD_RST, USBCMD_RST);
-	while (delay_count--  && hw_cread(CAP_USBCMD, USBCMD_RST))
-		udelay(10);
-	if (delay_count < 0)
-		pr_err("USB controller reset failed\n");
+	while (hw_cread(CAP_USBCMD, USBCMD_RST))
+		udelay(10);             
+
 
 	if (udc->udc_driver->notify_event)
 		udc->udc_driver->notify_event(udc,
@@ -520,8 +517,6 @@ static int hw_usb_set_address(u8 value)
 
 static int hw_usb_reset(void)
 {
-	int delay_count = 10; 
-
 	hw_usb_set_address(0);
 
 	
@@ -534,10 +529,8 @@ static int hw_usb_reset(void)
 	hw_cwrite(CAP_ENDPTCOMPLETE,  0,  0);   
 
 	
-	while (delay_count-- && hw_cread(CAP_ENDPTPRIME, ~0))
-		udelay(10);
-	if (delay_count < 0)
-		pr_err("ENDPTPRIME is not cleared during bus reset\n");
+	while (hw_cread(CAP_ENDPTPRIME, ~0))
+		udelay(10);             
 
 	
 
@@ -1346,7 +1339,7 @@ static inline u8 _usb_addr(struct ci13xxx_ep *ep)
 static void usb_chg_stop(struct work_struct *w)
 {
 	USB_INFO("disable charger\n");
-	htc_battery_pwrsrc_disable();
+	htc_battery_charger_disable();
 }
 
 static void ep_prime_timer_func(unsigned long data)
@@ -2901,17 +2894,7 @@ static irqreturn_t udc_irq(void)
 		if (USBi_URI & intr) {
 			USB_INFO("reset\n");
 			isr_statistics.uri++;
-
-			if (board_mfg_mode() == 5 || USB_disabled) {
-				USB_INFO("Offmode / QuickBootMode\n");
-				spin_unlock(udc->lock);
-				if (udc->transceiver)
-					udc->transceiver->notify_usb_disabled();
-				spin_lock(udc->lock);
-				isr_reset_handler(udc);
-			} else {
-				isr_reset_handler(udc);
-			}
+			isr_reset_handler(udc);
 
 			if (udc->transceiver)
 				udc->transceiver->notify_usb_attached();
