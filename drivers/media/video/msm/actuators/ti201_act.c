@@ -1,3 +1,4 @@
+
 /* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -15,8 +16,8 @@
 #include "msm_camera_i2c.h"
 #include <mach/gpio.h>
 
-#define	TI201_TOTAL_STEPS_NEAR_TO_FAR			30
-#define	TI201_TOTAL_STEPS_NEAR_TO_FAR_RAWCHIP_AF			256 
+#define	S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR			30
+#define	S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR_RAWCHIP_AF			256 
 
 #define REG_VCM_NEW_CODE			0x30F2
 #define REG_VCM_I2C_ADDR			0x1C
@@ -26,12 +27,12 @@
 #define REG_VCM_FREQ			0x07
 #define REG_VCM_RING_CTRL			0x400
 
-int ti201_sharp_kernel_step_table[TI201_TOTAL_STEPS_NEAR_TO_FAR+1]
+int s5k3h2yx_sharp_kernel_step_table[S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR+1]
 	= {304, 309, 314, 319, 324, 329, 333, 339, 344, 350,
 	355, 361, 366, 372, 378, 385, 391, 399, 406, 416,
 	425, 436, 446, 485, 469, 482, 494, 508, 522, 537, 552};
 
-int ti201_liteon_kernel_step_table[TI201_TOTAL_STEPS_NEAR_TO_FAR+1]
+int s5k3h2yx_liteon_kernel_step_table[S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR+1]
 	= {225, 229, 233, 237, 241, 245, 249, 254, 258, 263,
 	267, 272, 276, 281, 286, 291, 296, 303, 309, 317,
 	324, 333, 341, 351, 360, 371, 381, 393, 404, 417, 429};
@@ -41,20 +42,20 @@ int ti201_liteon_kernel_step_table[TI201_TOTAL_STEPS_NEAR_TO_FAR+1]
 #undef LINFO
 #define LINFO pr_info
 #endif
-DEFINE_MUTEX(ti201_act_mutex);
-static struct msm_actuator_ctrl_t ti201_act_t;
+DEFINE_MUTEX(s5k3h2yx_act_mutex);
+static struct msm_actuator_ctrl_t s5k3h2yx_act_t;
 
 static struct region_params_t g_regions[] = {
 	
 	{
-		.step_bound = {TI201_TOTAL_STEPS_NEAR_TO_FAR, 0},
+		.step_bound = {S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR, 0},
 		.code_per_step = 2,
 	},
 };
 
 static uint16_t g_scenario[] = {
 	
-	TI201_TOTAL_STEPS_NEAR_TO_FAR,
+	S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR,
 };
 
 static struct damping_params_t g_damping[] = {
@@ -74,42 +75,42 @@ static struct damping_t g_damping_params[] = {
 	},
 };
 
-static struct msm_actuator_info *ti201_msm_actuator_info;
+static struct msm_actuator_info *s5k3h2yx_msm_actuator_info;
 
-static int32_t ti201_poweron_af(void)
+static int32_t s5k3h2yx_poweron_af(void)
 {
 	int32_t rc = 0;
 	pr_info("%s enable AF actuator, gpio = %d\n", __func__,
-			ti201_msm_actuator_info->vcm_pwd);
+			s5k3h2yx_msm_actuator_info->vcm_pwd);
 	mdelay(1);
-	rc = gpio_request(ti201_msm_actuator_info->vcm_pwd, "ti201");
+	rc = gpio_request(s5k3h2yx_msm_actuator_info->vcm_pwd, "s5k3h2yx");
 	if (!rc)
-		gpio_direction_output(ti201_msm_actuator_info->vcm_pwd, 1);
+		gpio_direction_output(s5k3h2yx_msm_actuator_info->vcm_pwd, 1);
 	else
 		pr_err("%s: AF PowerON gpio_request failed %d\n", __func__, rc);
-	gpio_free(ti201_msm_actuator_info->vcm_pwd);
+	gpio_free(s5k3h2yx_msm_actuator_info->vcm_pwd);
 	mdelay(1);
 	return rc;
 }
 
-static void ti201_poweroff_af(void)
+static void s5k3h2yx_poweroff_af(void)
 {
 	int32_t rc = 0;
 
 	pr_info("%s disable AF actuator, gpio = %d\n", __func__,
-			ti201_msm_actuator_info->vcm_pwd);
+			s5k3h2yx_msm_actuator_info->vcm_pwd);
 
 	msleep(1);
-	rc = gpio_request(ti201_msm_actuator_info->vcm_pwd, "ti201");
+	rc = gpio_request(s5k3h2yx_msm_actuator_info->vcm_pwd, "s5k3h2yx");
 	if (!rc)
-		gpio_direction_output(ti201_msm_actuator_info->vcm_pwd, 0);
+		gpio_direction_output(s5k3h2yx_msm_actuator_info->vcm_pwd, 0);
 	else
 		pr_err("%s: AF PowerOFF gpio_request failed %d\n", __func__, rc);
-	gpio_free(ti201_msm_actuator_info->vcm_pwd);
+	gpio_free(s5k3h2yx_msm_actuator_info->vcm_pwd);
 	msleep(1);
 }
 
-int32_t ti201_msm_actuator_init_table(
+int32_t s5k3h2yx_msm_actuator_init_table(
 	struct msm_actuator_ctrl_t *a_ctrl)
 {
 	int32_t rc = 0;
@@ -120,17 +121,17 @@ int32_t ti201_msm_actuator_init_table(
 	if (a_ctrl->func_tbl.actuator_set_params)
 		a_ctrl->func_tbl.actuator_set_params(a_ctrl);
 #if 0
-	if (ti201_act_t.step_position_table) {
+	if (s5k3h2yx_act_t.step_position_table) {
 		LINFO("%s table inited\n", __func__);
 		return rc;
 	}
 #endif
 
-	if (ti201_msm_actuator_info->use_rawchip_af && a_ctrl->af_algo == AF_ALGO_RAWCHIP)
-		a_ctrl->set_info.total_steps = TI201_TOTAL_STEPS_NEAR_TO_FAR_RAWCHIP_AF;
+	if (s5k3h2yx_msm_actuator_info->use_rawchip_af && a_ctrl->af_algo == AF_ALGO_RAWCHIP)
+		a_ctrl->set_info.total_steps = S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR_RAWCHIP_AF;
 	else {
-		a_ctrl->set_info.total_steps = TI201_TOTAL_STEPS_NEAR_TO_FAR;
-		ref_table = (a_ctrl->af_OTP_info.VCM_Vendor == 0x1) ? ti201_sharp_kernel_step_table : ti201_liteon_kernel_step_table;
+		a_ctrl->set_info.total_steps = S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR;
+		ref_table = (a_ctrl->af_OTP_info.VCM_Vendor == 0x1) ? s5k3h2yx_sharp_kernel_step_table : s5k3h2yx_liteon_kernel_step_table;
 		if (a_ctrl->af_OTP_info.VCM_OTP_Read)
 			a_ctrl->initial_code = a_ctrl->af_OTP_info.VCM_Infinity;
 		else
@@ -148,15 +149,15 @@ int32_t ti201_msm_actuator_init_table(
 
 	if (a_ctrl->step_position_table != NULL) {
 		uint16_t i = 0;
-		uint16_t ti201_nl_region_boundary1 = 2;
-		uint16_t ti201_nl_region_code_per_step1 = 32;
-		uint16_t ti201_l_region_code_per_step = 16;
-		uint16_t ti201_max_value = 1023;
+		uint16_t s5k3h2yx_nl_region_boundary1 = 2;
+		uint16_t s5k3h2yx_nl_region_code_per_step1 = 32;
+		uint16_t s5k3h2yx_l_region_code_per_step = 16;
+		uint16_t s5k3h2yx_max_value = 1023;
 
 		a_ctrl->step_position_table[0] = a_ctrl->initial_code;
 
 		for (i = 1; i <= a_ctrl->set_info.total_steps; i++) {
-			if (ti201_msm_actuator_info->use_rawchip_af && a_ctrl->af_algo == AF_ALGO_RAWCHIP) 
+			if (s5k3h2yx_msm_actuator_info->use_rawchip_af && a_ctrl->af_algo == AF_ALGO_RAWCHIP) 
 				a_ctrl->step_position_table[i] =
 					a_ctrl->step_position_table[i-1] + 4;
 			else
@@ -169,19 +170,19 @@ int32_t ti201_msm_actuator_init_table(
 					else
 						a_ctrl->step_position_table[i] = ref_table[i];
 				} else {
-					if (i <= ti201_nl_region_boundary1) {
+					if (i <= s5k3h2yx_nl_region_boundary1) {
 						a_ctrl->step_position_table[i] =
 							a_ctrl->step_position_table[i-1]
-							+ ti201_nl_region_code_per_step1;
+							+ s5k3h2yx_nl_region_code_per_step1;
 					} else {
 						a_ctrl->step_position_table[i] =
 							a_ctrl->step_position_table[i-1]
-							+ ti201_l_region_code_per_step;
+							+ s5k3h2yx_l_region_code_per_step;
 					}
 				}
 
-				if (a_ctrl->step_position_table[i] > ti201_max_value)
-					a_ctrl->step_position_table[i] = ti201_max_value;
+				if (a_ctrl->step_position_table[i] > s5k3h2yx_max_value)
+					a_ctrl->step_position_table[i] = s5k3h2yx_max_value;
 			}
 		}
 		a_ctrl->curr_step_pos = 0;
@@ -194,7 +195,7 @@ int32_t ti201_msm_actuator_init_table(
 	return rc;
 }
 
-int32_t ti201_msm_actuator_move_focus(
+int32_t s5k3h2yx_msm_actuator_move_focus(
 	struct msm_actuator_ctrl_t *a_ctrl,
 	int dir,
 	int32_t num_steps)
@@ -244,22 +245,22 @@ int32_t ti201_msm_actuator_move_focus(
 	return rc;
 }
 
-int ti201_actuator_af_power_down(void *params)
+int s5k3h2yx_actuator_af_power_down(void *params)
 {
 	int rc = 0;
 	LINFO("%s called\n", __func__);
 
 #if defined(CONFIG_ACT_OIS_BINDER)
-	if (ti201_msm_actuator_info->oisbinder_power_down)
-		ti201_msm_actuator_info->oisbinder_power_down();
+	if (s5k3h2yx_msm_actuator_info->oisbinder_power_down)
+		s5k3h2yx_msm_actuator_info->oisbinder_power_down();
 #endif
 
-	rc = (int) msm_actuator_af_power_down(&ti201_act_t);
-	ti201_poweroff_af();
+	rc = (int) msm_actuator_af_power_down(&s5k3h2yx_act_t);
+	s5k3h2yx_poweroff_af();
 	return rc;
 }
 
-static int32_t ti201_wrapper_i2c_write(struct msm_actuator_ctrl_t *a_ctrl,
+static int32_t s5k3h2yx_wrapper_i2c_write(struct msm_actuator_ctrl_t *a_ctrl,
 	int16_t next_lens_position, void *params)
 {
 	int32_t rc = 0;
@@ -285,7 +286,7 @@ static int32_t ti201_wrapper_i2c_write(struct msm_actuator_ctrl_t *a_ctrl,
 	return rc;
 }
 
-int32_t ti201_act_write_focus(
+int32_t s5k3h2yx_act_write_focus(
 	struct msm_actuator_ctrl_t *a_ctrl,
 	uint16_t curr_lens_pos,
 	struct damping_params_t *damping_params,
@@ -314,7 +315,7 @@ int32_t ti201_act_write_focus(
 	return rc;
 }
 
-static int32_t ti201_act_init_focus(struct msm_actuator_ctrl_t *a_ctrl)
+static int32_t s5k3h2yx_act_init_focus(struct msm_actuator_ctrl_t *a_ctrl)
 {
 	int32_t rc = 0;
 
@@ -328,14 +329,14 @@ static int32_t ti201_act_init_focus(struct msm_actuator_ctrl_t *a_ctrl)
 	return rc;
 }
 
-int32_t  ti201_act_set_af_value(struct msm_actuator_ctrl_t *a_ctrl, af_value_t af_value)
+int32_t  s5k3h2yx_act_set_af_value(struct msm_actuator_ctrl_t *a_ctrl, af_value_t af_value)
 {
 	int32_t rc = 0;
 	uint8_t OTP_data[8] = {0,0,0,0,0,0,0,0};
 	int16_t VCM_Infinity = 0;
 	int32_t otp_deviation = 0;
 
-	if (ti201_msm_actuator_info->use_rawchip_af && a_ctrl->af_algo == AF_ALGO_RAWCHIP)
+	if (s5k3h2yx_msm_actuator_info->use_rawchip_af && a_ctrl->af_algo == AF_ALGO_RAWCHIP)
 		return rc;
 
 	OTP_data[0] = af_value.VCM_START_MSB;
@@ -369,53 +370,53 @@ int32_t  ti201_act_set_af_value(struct msm_actuator_ctrl_t *a_ctrl, af_value_t a
 }
 
 #if defined(CONFIG_ACT_OIS_BINDER)
-int32_t ti201_act_set_ois_mode(struct msm_actuator_ctrl_t *a_ctrl, int ois_mode)
+int32_t s5k3h2yx_act_set_ois_mode(struct msm_actuator_ctrl_t *a_ctrl, int ois_mode)
 {
 	int32_t rc = 0;
 
 	pr_info("[OIS]  %s  ois_mode:%d\n", __func__, ois_mode);
-	if (ti201_msm_actuator_info->oisbinder_act_set_ois_mode)
-		rc = ti201_msm_actuator_info->oisbinder_act_set_ois_mode(ois_mode);
+	if (s5k3h2yx_msm_actuator_info->oisbinder_act_set_ois_mode)
+		rc = s5k3h2yx_msm_actuator_info->oisbinder_act_set_ois_mode(ois_mode);
 	return rc;
 }
-int32_t ti201_act_update_ois_tbl(struct msm_actuator_ctrl_t *a_ctrl, struct sensor_actuator_info_t * sensor_actuator_info)
+int32_t s5k3h2yx_act_update_ois_tbl(struct msm_actuator_ctrl_t *a_ctrl, struct sensor_actuator_info_t * sensor_actuator_info)
 {
 	int32_t rc = 0;
 
 	pr_info("[OIS]  %s  startup_mode=%d\n", __func__, sensor_actuator_info->startup_mode);
-	if (ti201_msm_actuator_info->oisbinder_mappingTbl_i2c_write)
-		rc = ti201_msm_actuator_info->oisbinder_mappingTbl_i2c_write(sensor_actuator_info->startup_mode, sensor_actuator_info);
+	if (s5k3h2yx_msm_actuator_info->oisbinder_mappingTbl_i2c_write)
+		rc = s5k3h2yx_msm_actuator_info->oisbinder_mappingTbl_i2c_write(sensor_actuator_info->startup_mode, sensor_actuator_info);
 	return rc;
 }
 #endif
 
-static const struct i2c_device_id ti201_act_i2c_id[] = {
-	{"ti201_act", (kernel_ulong_t)&ti201_act_t},
+static const struct i2c_device_id s5k3h2yx_act_i2c_id[] = {
+	{"s5k3h2yx_act", (kernel_ulong_t)&s5k3h2yx_act_t},
 	{ }
 };
 
-static int ti201_act_config(
+static int s5k3h2yx_act_config(
 	void __user *argp)
 {
 	LINFO("%s called\n", __func__);
-	return (int) msm_actuator_config(&ti201_act_t,
-		ti201_msm_actuator_info, argp); 
+	return (int) msm_actuator_config(&s5k3h2yx_act_t,
+		s5k3h2yx_msm_actuator_info, argp); 
 }
 
-static int ti201_i2c_add_driver_table(
+static int s5k3h2yx_i2c_add_driver_table(
 	void)
 {
 	int32_t rc = 0;
 
 	pr_info("%s called\n", __func__);
 
-	rc = ti201_poweron_af();
+	rc = s5k3h2yx_poweron_af();
 	if (rc < 0) {
 		pr_err("%s power on failed\n", __func__);
 		return (int) rc;
 	}
 
-	rc = msm_camera_i2c_write(&ti201_act_t.i2c_client,
+	rc = msm_camera_i2c_write(&s5k3h2yx_act_t.i2c_client,
 		0x02,
 		0x02,
 		MSM_CAMERA_I2C_BYTE_DATA);
@@ -430,7 +431,7 @@ static int ti201_i2c_add_driver_table(
 	
 	
 	
-	rc = msm_camera_i2c_write(&ti201_act_t.i2c_client,
+	rc = msm_camera_i2c_write(&s5k3h2yx_act_t.i2c_client,
 		REG_VCM_MODE,
 		0x03,
 		MSM_CAMERA_I2C_BYTE_DATA);
@@ -443,7 +444,7 @@ static int ti201_i2c_add_driver_table(
 	
 	
 	
-	rc = msm_camera_i2c_write(&ti201_act_t.i2c_client,
+	rc = msm_camera_i2c_write(&s5k3h2yx_act_t.i2c_client,
 		REG_VCM_FREQ,
 		0x61,
 		MSM_CAMERA_I2C_BYTE_DATA);
@@ -452,14 +453,14 @@ static int ti201_i2c_add_driver_table(
 		return rc;
 	}
 
-	ti201_act_t.step_position_table = NULL;
-	rc = ti201_act_t.func_tbl.actuator_init_table(&ti201_act_t);
+	s5k3h2yx_act_t.step_position_table = NULL;
+	rc = s5k3h2yx_act_t.func_tbl.actuator_init_table(&s5k3h2yx_act_t);
 	if (rc < 0) {
 		pr_err("%s init table failed\n", __func__);
 		return (int) rc;
 	}
 
-	rc = msm_camera_i2c_write(&(ti201_act_t.i2c_client),
+	rc = msm_camera_i2c_write(&(s5k3h2yx_act_t.i2c_client),
 		0x0001, 0x01,
 		MSM_CAMERA_I2C_BYTE_DATA);
 	if (rc < 0) {
@@ -468,36 +469,36 @@ static int ti201_i2c_add_driver_table(
 	}
 
 #if defined(CONFIG_ACT_OIS_BINDER)
-	if (ti201_msm_actuator_info->oisbinder_open_init)
-		ti201_msm_actuator_info->oisbinder_open_init();
+	if (s5k3h2yx_msm_actuator_info->oisbinder_open_init)
+		s5k3h2yx_msm_actuator_info->oisbinder_open_init();
 #endif
 
 	return (int) rc;
 }
 
-static struct i2c_driver ti201_act_i2c_driver = {
-	.id_table = ti201_act_i2c_id,
+static struct i2c_driver s5k3h2yx_act_i2c_driver = {
+	.id_table = s5k3h2yx_act_i2c_id,
 	.probe  = msm_actuator_i2c_probe,
-	.remove = __exit_p(ti201_act_i2c_remove),
+	.remove = __exit_p(s5k3h2yx_act_i2c_remove),
 	.driver = {
-		.name = "ti201_act",
+		.name = "s5k3h2yx_act",
 	},
 };
 
-static int __init ti201_i2c_add_driver(
+static int __init s5k3h2yx_i2c_add_driver(
 	void)
 {
 	pr_info("%s called\n", __func__);
-	return i2c_add_driver(ti201_act_t.i2c_driver);
+	return i2c_add_driver(s5k3h2yx_act_t.i2c_driver);
 }
 
-static struct v4l2_subdev_core_ops ti201_act_subdev_core_ops;
+static struct v4l2_subdev_core_ops s5k3h2yx_act_subdev_core_ops;
 
-static struct v4l2_subdev_ops ti201_act_subdev_ops = {
-	.core = &ti201_act_subdev_core_ops,
+static struct v4l2_subdev_ops s5k3h2yx_act_subdev_ops = {
+	.core = &s5k3h2yx_act_subdev_core_ops,
 };
 
-static int32_t ti201_act_create_subdevice(
+static int32_t s5k3h2yx_act_create_subdevice(
 	void *board_info,
 	void *sdev)
 {
@@ -505,29 +506,29 @@ static int32_t ti201_act_create_subdevice(
 
 	LINFO("%s called\n", __func__);
 
-	ti201_msm_actuator_info = (struct msm_actuator_info *)board_info;
+	s5k3h2yx_msm_actuator_info = (struct msm_actuator_info *)board_info;
 
-	rc = (int) msm_actuator_create_subdevice(&ti201_act_t,
-		ti201_msm_actuator_info->board_info,
+	rc = (int) msm_actuator_create_subdevice(&s5k3h2yx_act_t,
+		s5k3h2yx_msm_actuator_info->board_info,
 		(struct v4l2_subdev *)sdev);
 
 #if defined(CONFIG_ACT_OIS_BINDER)
-	if (ti201_msm_actuator_info->oisbinder_i2c_add_driver)
-		ti201_msm_actuator_info->oisbinder_i2c_add_driver(&(ti201_act_t.i2c_client));
+	if (s5k3h2yx_msm_actuator_info->oisbinder_i2c_add_driver)
+		s5k3h2yx_msm_actuator_info->oisbinder_i2c_add_driver(&(s5k3h2yx_act_t.i2c_client));
 #endif
 
 	return rc;
 }
 
-static struct msm_actuator_ctrl_t ti201_act_t = {
-	.i2c_driver = &ti201_act_i2c_driver,
+static struct msm_actuator_ctrl_t s5k3h2yx_act_t = {
+	.i2c_driver = &s5k3h2yx_act_i2c_driver,
 	.i2c_addr = REG_VCM_I2C_ADDR,
-	.act_v4l2_subdev_ops = &ti201_act_subdev_ops,
+	.act_v4l2_subdev_ops = &s5k3h2yx_act_subdev_ops,
 	.actuator_ext_ctrl = {
-		.a_init_table = ti201_i2c_add_driver_table,
-		.a_power_down = ti201_actuator_af_power_down,
-		.a_create_subdevice = ti201_act_create_subdevice,
-		.a_config = ti201_act_config,
+		.a_init_table = s5k3h2yx_i2c_add_driver_table,
+		.a_power_down = s5k3h2yx_actuator_af_power_down,
+		.a_create_subdevice = s5k3h2yx_act_create_subdevice,
+		.a_config = s5k3h2yx_act_config,
 #if defined(CONFIG_ACT_OIS_BINDER)
 		.is_ois_supported = 1,
 #endif
@@ -538,7 +539,7 @@ static struct msm_actuator_ctrl_t ti201_act_t = {
 	},
 
 	.set_info = {
-		.total_steps = TI201_TOTAL_STEPS_NEAR_TO_FAR_RAWCHIP_AF, 
+		.total_steps = S5K3H2YX_TOTAL_STEPS_NEAR_TO_FAR_RAWCHIP_AF, 
 		.gross_steps = 3,	
 		.fine_steps = 1,	
 	},
@@ -546,20 +547,20 @@ static struct msm_actuator_ctrl_t ti201_act_t = {
 	.curr_step_pos = 0,
 	.curr_region_index = 0,
 	.initial_code = 0,	
-	.actuator_mutex = &ti201_act_mutex,
+	.actuator_mutex = &s5k3h2yx_act_mutex,
 	.af_algo = AF_ALGO_RAWCHIP, 
 
 	.func_tbl = {
-		.actuator_init_table = ti201_msm_actuator_init_table,
-		.actuator_move_focus = ti201_msm_actuator_move_focus,
-		.actuator_write_focus = ti201_act_write_focus,
+		.actuator_init_table = s5k3h2yx_msm_actuator_init_table,
+		.actuator_move_focus = s5k3h2yx_msm_actuator_move_focus,
+		.actuator_write_focus = s5k3h2yx_act_write_focus,
 		.actuator_set_default_focus = msm_actuator_set_default_focus,
-		.actuator_init_focus = ti201_act_init_focus,
-		.actuator_i2c_write = ti201_wrapper_i2c_write,
-		.actuator_set_af_value = ti201_act_set_af_value,
+		.actuator_init_focus = s5k3h2yx_act_init_focus,
+		.actuator_i2c_write = s5k3h2yx_wrapper_i2c_write,
+		.actuator_set_af_value = s5k3h2yx_act_set_af_value,
 #if defined(CONFIG_ACT_OIS_BINDER)
-		.actuator_set_ois_mode = ti201_act_set_ois_mode,
-		.actuator_update_ois_tbl = ti201_act_update_ois_tbl,
+		.actuator_set_ois_mode = s5k3h2yx_act_set_ois_mode,
+		.actuator_update_ois_tbl = s5k3h2yx_act_update_ois_tbl,
 #endif
 	},
 
@@ -589,6 +590,6 @@ static struct msm_actuator_ctrl_t ti201_act_t = {
 	.damping[MOVE_FAR] = g_damping_params,
 };
 
-subsys_initcall(ti201_i2c_add_driver);
-MODULE_DESCRIPTION("TI201 actuator");
+subsys_initcall(s5k3h2yx_i2c_add_driver);
+MODULE_DESCRIPTION("S5K3H2YX actuator");
 MODULE_LICENSE("GPL v2");

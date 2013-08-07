@@ -132,12 +132,11 @@ int32_t imx175_msm_actuator_init_table(
 
 		a_ctrl->step_position_table[0] = a_ctrl->initial_code;
 		for (i = 1; i <= a_ctrl->set_info.total_steps; i++) {
-#ifdef USE_RAWCHIP_AF
+
 			if (imx175_msm_actuator_info->use_rawchip_af)
 				a_ctrl->step_position_table[i] =
 					a_ctrl->step_position_table[i-1] + 4;
 			else
-#endif
 			{
 			if (i <= imx175_nl_region_boundary1) {
 				a_ctrl->step_position_table[i] =

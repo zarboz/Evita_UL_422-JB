@@ -56,8 +56,8 @@ struct snd_msm {
 	struct msm_audio *prtd;
 	unsigned volume;
 };
-static struct snd_msm compressed_audio = {NULL, 0x2000} ;
-static struct snd_msm compressed2_audio = {NULL, 0x2000} ;
+static struct snd_msm compressed_audio = {NULL, 0} ;
+static struct snd_msm compressed2_audio = {NULL, 0} ;
 
 static struct audio_locks the_locks;
 
@@ -88,7 +88,7 @@ static struct snd_pcm_hardware msm_compr_hardware_playback = {
 				SNDRV_PCM_INFO_MMAP_VALID |
 				SNDRV_PCM_INFO_INTERLEAVED |
 				SNDRV_PCM_INFO_PAUSE | SNDRV_PCM_INFO_RESUME),
-	.formats =	      SNDRV_PCM_FMTBIT_S16_LE,
+	.formats =	      SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE,
 	.rates =		SNDRV_PCM_RATE_8000_48000 | SNDRV_PCM_RATE_KNOT,
 	.rate_min =	     8000,
 	.rate_max =	     48000,
@@ -111,6 +111,14 @@ static struct snd_pcm_hw_constraint_list constraints_sample_rates = {
 	.list = supported_sample_rates,
 	.mask = 0,
 };
+
+static struct msm_compr_q6_ops default_cops;
+static struct msm_compr_q6_ops *cops = &default_cops;
+
+void htc_register_compr_q6_ops(struct msm_compr_q6_ops *ops)
+{
+	cops = ops;
+}
 
 static void compr_event_handler(uint32_t opcode,
 		uint32_t token, uint32_t *payload, void *priv)
@@ -209,6 +217,7 @@ static void compr_event_handler(uint32_t opcode,
 			wake_up(&the_locks.eos_wait);
 			atomic_set(&prtd->eos, 0);
 		}
+		atomic_set(&prtd->pending_buffer, 1);
 		break;
 	case ASM_DATA_EVENT_READ_DONE: {
 		pr_debug("[%p] ASM_DATA_EVENT_READ_DONE\n", prtd);
@@ -330,17 +339,6 @@ static int msm_compr_playback_prepare(struct snd_pcm_substream *substream)
 	struct asm_wma_cfg wma_cfg;
 	struct asm_wmapro_cfg wma_pro_cfg;
 	int ret;
-	struct asm_softpause_params softpause = {
-		.enable = SOFT_PAUSE_ENABLE,
-		.period = SOFT_PAUSE_PERIOD*3,
-		.step = SOFT_PAUSE_STEP,
-		.rampingcurve = SOFT_PAUSE_CURVE_LINEAR,
-	};
-	struct asm_softvolume_params softvol = {
-		.period = SOFT_VOLUME_PERIOD,
-		.step = SOFT_VOLUME_STEP,
-		.rampingcurve = SOFT_VOLUME_CURVE_LINEAR,
-	};
 
 	pr_debug("[%p] compressed stream prepare\n", prtd);
 	prtd->pcm_size = snd_pcm_lib_buffer_bytes(substream);
@@ -363,6 +361,15 @@ static int msm_compr_playback_prepare(struct snd_pcm_substream *substream)
 		if (ret < 0)
 			pr_info("[%p] %s: CMD Format block failed\n", prtd, __func__);
 		break;
+	case SND_AUDIOCODEC_PCM:
+		pr_debug("[%p] %s: SND_AUDIOCODEC_PCM, sampleRate: %d, channel: %d\n",
+				prtd, __func__, prtd->samp_rate, prtd->channel_mode);
+		ret = q6asm_media_format_block_pcm(prtd->audio_client, prtd->samp_rate,
+				prtd->channel_mode);
+		if (ret < 0)
+			pr_info("[%p] %s: CMD Format block failed\n", prtd, __func__);
+		break;
+
 	case SND_AUDIOCODEC_AAC:
 		pr_debug("[%p] %s: SND_AUDIOCODEC_AAC\n", prtd, __func__);
 		memset(&aac_cfg, 0x0, sizeof(struct asm_aac_cfg));
@@ -445,14 +452,6 @@ static int msm_compr_playback_prepare(struct snd_pcm_substream *substream)
 	prtd->enabled = 1;
 	prtd->cmd_ack = 0;
 
-	if (compressed_audio.prtd && compressed_audio.prtd->audio_client) {
-		pr_debug("[%p] %s q6asm_set_softvolume\n", prtd, __func__);
-		q6asm_set_softpause(compressed_audio.prtd->audio_client,
-							&softpause);
-		q6asm_set_softvolume(compressed_audio.prtd->audio_client,
-							&softvol);
-	}
-
 	return 0;
 }
 
@@ -503,7 +502,8 @@ static int msm_compr_trigger(struct snd_pcm_substream *substream, int cmd)
 	struct compr_audio *compr = runtime->private_data;
 	struct msm_audio *prtd = &compr->prtd;
 
-	pr_debug("[%p] %s\n", prtd,__func__);
+	pr_debug("[%p][AUD] %s, cmd %d, 3 sec wake lock\n", prtd,__func__, cmd);
+	wake_lock_timeout(&compr_lpa_wakelock, 3 * HZ);
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 		prtd->pcm_irq_pos = 0;
@@ -527,6 +527,7 @@ static int msm_compr_trigger(struct snd_pcm_substream *substream, int cmd)
 		pr_debug("[%p] %s: Trigger start/resume\n", prtd, __func__);
 		q6asm_run_nowait(prtd->audio_client, 0, 0, 0);
 		atomic_set(&prtd->start, 1);
+		
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
 		pr_debug("[%p] SNDRV_PCM_TRIGGER_STOP\n", prtd);
@@ -565,7 +566,7 @@ static void populate_codec_list(struct compr_audio *compr,
 {
 	pr_debug("%s\n", __func__);
 	
-	compr->info.compr_cap.num_codecs = 1;
+	compr->info.compr_cap.num_codecs = 11;
 	compr->info.compr_cap.min_fragment_size = runtime->hw.period_bytes_min;
 	compr->info.compr_cap.max_fragment_size = runtime->hw.period_bytes_max;
 	compr->info.compr_cap.min_fragments = runtime->hw.periods_min;
@@ -578,6 +579,9 @@ static void populate_codec_list(struct compr_audio *compr,
 	compr->info.compr_cap.codecs[5] = SND_AUDIOCODEC_DTS;
 	compr->info.compr_cap.codecs[6] = SND_AUDIOCODEC_DTS_LBR;
 	compr->info.compr_cap.codecs[7] = SND_AUDIOCODEC_DTS_PASS_THROUGH;
+	compr->info.compr_cap.codecs[8] = SND_AUDIOCODEC_AMRWB;
+	compr->info.compr_cap.codecs[9] = SND_AUDIOCODEC_AMRWBPLUS;
+	compr->info.compr_cap.codecs[10] = SND_AUDIOCODEC_PCM;
 	
 }
 
@@ -589,17 +593,6 @@ static int msm_compr_open(struct snd_pcm_substream *substream)
 	struct compr_audio *compr;
 	struct msm_audio *prtd;
 	int ret = 0;
-	struct asm_softpause_params softpause = {
-		.enable = SOFT_PAUSE_ENABLE,
-		.period = SOFT_PAUSE_PERIOD,
-		.step = SOFT_PAUSE_STEP,
-		.rampingcurve = SOFT_PAUSE_CURVE_LINEAR,
-	};
-	struct asm_softvolume_params softvol = {
-		.period = SOFT_VOLUME_PERIOD,
-		.step = SOFT_VOLUME_STEP,
-		.rampingcurve = SOFT_VOLUME_CURVE_LINEAR,
-	};
 
 	pr_debug("%s\n", __func__);
 	str_name = (char*)rtd->dai_link->stream_name;
@@ -652,36 +645,8 @@ static int msm_compr_open(struct snd_pcm_substream *substream)
 	atomic_set(&prtd->eos, 0);
 	if (str_name != NULL && !strncmp(str_name,"COMPR2", 6)) {
 		compressed2_audio.prtd =  &compr->prtd;
-		ret = compressed2_set_volume(compressed2_audio.volume);
-		if (ret < 0)
-			pr_err("[%p] %s : Set Volume failed : %d", prtd, __func__, ret);
-
-		ret = q6asm_set_softpause(compressed2_audio.prtd->audio_client,
-									&softpause);
-		if (ret < 0)
-			pr_err("[%p] %s: Send SoftPause Param failed ret=%d\n",
-				prtd, __func__, ret);
-		ret = q6asm_set_softvolume(compressed2_audio.prtd->audio_client,
-									&softvol);
-		if (ret < 0)
-			pr_err("[%p] %s: Send SoftVolume Param failed ret=%d\n",
-				prtd, __func__, ret);
 	} else {
 		compressed_audio.prtd =  &compr->prtd;
-		ret = compressed_set_volume(compressed_audio.volume);
-		if (ret < 0)
-			pr_err("[%p] %s : Set Volume failed : %d", prtd,__func__, ret);
-
-		ret = q6asm_set_softpause(compressed_audio.prtd->audio_client,
-									&softpause);
-		if (ret < 0)
-			pr_err("[%p] %s: Send SoftPause Param failed ret=%d\n",
-				prtd, __func__, ret);
-		ret = q6asm_set_softvolume(compressed_audio.prtd->audio_client,
-									&softvol);
-		if (ret < 0)
-			pr_err("[%p] %s: Send SoftVolume Param failed ret=%d\n",
-				prtd, __func__, ret);
 	}
 
 	return 0;
@@ -860,12 +825,41 @@ static int msm_compr_hw_params(struct snd_pcm_substream *substream,
 	struct snd_dma_buffer *dma_buf = &substream->dma_buffer;
 	struct audio_buffer *buf;
 	int dir, ret;
+	short bit_width = 16;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	char * str_name;
+	struct asm_softpause_params softpause = {
+		.enable = SOFT_PAUSE_ENABLE,
+		.period = SOFT_PAUSE_PERIOD*3,
+		.step = SOFT_PAUSE_STEP,
+		.rampingcurve = SOFT_PAUSE_CURVE_LINEAR,
+	};
+	struct asm_softvolume_params softvol = {
+#ifdef CONFIG_MSM8960_ONLY
+		.period = 30,
+#else
+		.period = 50,
+#endif
+		.step = SOFT_VOLUME_STEP,
+		.rampingcurve = SOFT_VOLUME_CURVE_LINEAR,
+	};
 
 	pr_debug("[%p] %s\n", prtd, __func__);
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 		dir = IN;
 	else
 		dir = OUT;
+
+	if (runtime->format == SNDRV_PCM_FORMAT_S24_LE)
+		bit_width = 24;
+
+	if (cops->get_24b_audio) {
+		if (cops->get_24b_audio() == 1) {
+			pr_info("%s: enable 24 bit Audio in POPP\n",
+				    __func__);
+			bit_width = 24;
+		}
+	}
 
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
@@ -882,8 +876,8 @@ static int msm_compr_hw_params(struct snd_pcm_substream *substream,
 			}
 			break;
 		default:
-			ret = q6asm_open_write(prtd->audio_client,
-					compr->codec);
+			ret = q6asm_open_write_v2(prtd->audio_client,
+					compr->codec, bit_width);
 			if (ret < 0) {
 				pr_err("[%p] %s: Session out open failed\n",
 					prtd, __func__);
@@ -905,6 +899,48 @@ static int msm_compr_hw_params(struct snd_pcm_substream *substream,
 			return -ENOMEM;
 		}
 	}
+	str_name = (char*)rtd->dai_link->stream_name;
+	if (str_name != NULL)
+		pr_info("%s, dai_link stream name = %s\n", __func__, str_name);
+
+	if (str_name != NULL && !strncmp(str_name,"COMPR2", 6)) {
+		if (compressed2_audio.prtd && compressed2_audio.prtd->audio_client) {
+			pr_debug("[%p] %s compressed2 set ramping for %d ms\n", prtd, __func__,softvol.period);
+			ret = compressed2_set_volume(compressed2_audio.volume);
+			if (ret < 0)
+				pr_err("[%p] %s : Set Volume2 failed : %d", prtd, __func__, ret);
+
+			ret = q6asm_set_softpause(compressed2_audio.prtd->audio_client,
+										&softpause);
+			if (ret < 0)
+				pr_err("[%p] %s: Send SoftPause2 Param failed ret=%d\n",
+					prtd, __func__, ret);
+			ret = q6asm_set_softvolume(compressed2_audio.prtd->audio_client,
+										&softvol);
+			if (ret < 0)
+				pr_err("[%p] %s: Send SoftVolume2 Param failed ret=%d\n",
+					prtd, __func__, ret);
+		}
+	} else {
+		if (compressed_audio.prtd && compressed_audio.prtd->audio_client) {
+			pr_debug("[%p] %s compressed set ramping for %d ms\n", prtd, __func__,softvol.period);
+			ret = compressed_set_volume(compressed_audio.volume);
+			if (ret < 0)
+				pr_err("[%p] %s : Set Volume failed : %d", prtd,__func__, ret);
+
+			ret = q6asm_set_softpause(compressed_audio.prtd->audio_client,
+										&softpause);
+			if (ret < 0)
+				pr_err("[%p] %s: Send SoftPause Param failed ret=%d\n",
+					prtd, __func__, ret);
+			ret = q6asm_set_softvolume(compressed_audio.prtd->audio_client,
+										&softvol);
+			if (ret < 0)
+				pr_err("[%p] %s: Send SoftVolume Param failed ret=%d\n",
+					prtd, __func__, ret);
+		}
+	}
+
 	ret = q6asm_set_io_mode(prtd->audio_client, ASYNC_IO_MODE);
 	if (ret < 0) {
 		pr_err("[%p] %s: Set IO mode failed\n", prtd, __func__);
@@ -953,6 +989,7 @@ static int msm_compr_ioctl(struct snd_pcm_substream *substream,
 	uint32_t eos_flush_check;
 	
 
+	wake_lock_timeout(&compr_lpa_wakelock, 3 * HZ);
 	switch (cmd) {
 	case SNDRV_COMPRESS_TSTAMP: {
 		struct snd_compr_tstamp tstamp;
@@ -997,6 +1034,11 @@ static int msm_compr_ioctl(struct snd_pcm_substream *substream,
 			
 			pr_debug("[%p] SND_AUDIOCODEC_MP3\n", prtd);
 			compr->codec = FORMAT_MP3;
+			break;
+		case SND_AUDIOCODEC_PCM:
+			
+			pr_debug("[%p] SND_AUDIOCODEC_PCM\n", prtd);
+			compr->codec = FORMAT_LINEAR_PCM;
 			break;
 		case SND_AUDIOCODEC_AAC:
 			pr_debug("[%p] SND_AUDIOCODEC_AAC\n", prtd);
@@ -1047,6 +1089,8 @@ static int msm_compr_ioctl(struct snd_pcm_substream *substream,
 				
 				eos_flush_check = 1;
 				
+				pr_debug("[%p] %s: SNDRV_PCM_IOCTL1_RESET, set pending_buffer 1\n", prtd, __func__);
+				atomic_set(&prtd->pending_buffer, 1);
 			}
 
 			
@@ -1062,6 +1106,7 @@ static int msm_compr_ioctl(struct snd_pcm_substream *substream,
 					prtd->cmd_ack, 5 * HZ);
 				if (rc < 0)
 					pr_err("[%p] Flush cmd timeout\n", prtd);
+				atomic_set(&prtd->pending_buffer, 1);
 			
 			}
 			
