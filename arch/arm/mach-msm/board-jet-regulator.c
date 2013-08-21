@@ -501,16 +501,10 @@ struct platform_device msm8960_device_rpm_regulator __devinitdata = {
 };
 
 struct regulator_init_data msm_saw_regulator_pdata_s5 =
-
-#ifdef CONFIG_MSM_CPU_OC
-	SAW_VREG_INIT(S5, "8921_s5",	       850000, 1350000);
-struct regulator_init_data msm_saw_regulator_pdata_s6 =
-	SAW_VREG_INIT(S6, "8921_s6",	       850000, 1350000);
-#else
+	
 	SAW_VREG_INIT(S5, "8921_s5",	       850000, 1300000);
 struct regulator_init_data msm_saw_regulator_pdata_s6 =
 	SAW_VREG_INIT(S6, "8921_s6",	       850000, 1300000);
-#endif
 
 struct pm8xxx_regulator_platform_data
 msm_pm8921_regulator_pdata[] __devinitdata = {

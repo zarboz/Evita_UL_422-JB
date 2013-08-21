@@ -11,6 +11,6 @@ obj-$(CONFIG_MACH_RUBY) += ruby-panel.o
 # msm8960
 obj-$(CONFIG_MACH_VILLE) += board-ville-panel.o board-ville-display.o
 obj-$(CONFIG_MACH_ELITE) += board-elite-display.o board-elite-panel.o
-obj-$(CONFIG_MACH_JET) += board-jet-panel.o
+obj-$(CONFIG_MACH_JET) += board-jet-panel.o board-jet-display.o
 obj-$(CONFIG_MACH_FIGHTER) += board-fighter-panel.o
 obj-$(CONFIG_MACH_VALENTE_WX) += board-valente_wx-panel.o board-valente_wx-display.o
