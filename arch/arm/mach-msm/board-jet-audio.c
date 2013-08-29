@@ -1058,6 +1058,7 @@ static struct snd_soc_dai_link msm8960_dai_common[] = {
 		.codec_name = "snd-soc-dummy",
 		.be_id = MSM_FRONTEND_DAI_VOLTE,
 	},
+/*
 	{
 		.name = "SGLTE",
 		.stream_name = "SGLTE",
@@ -1073,7 +1074,7 @@ static struct snd_soc_dai_link msm8960_dai_common[] = {
 		.codec_name = "snd-soc-dummy",
 		.be_id = MSM_FRONTEND_DAI_SGLTE,
 	},
-	
+	*/
 	{
 		.name = LPASS_BE_INT_BT_SCO_RX,
 		.stream_name = "Internal BT-SCO Playback",
