@@ -71,7 +71,6 @@ struct pm8xxx_led_configure {
 	int		function_flags;
 	int		duties[64];
 	void 		(*gpio_status_switch)(bool);
-	int 		(*lpm_power)(int on);
 };
 
 struct pm8xxx_led_platform_data {
@@ -100,7 +99,6 @@ struct pm8xxx_led_data {
 	struct work_struct 		led_work;
 	struct alarm		   led_alarm;
 	void (*gpio_status_switch)(bool);
-	int 	(*lpm_power)(int on);
 };
 void pm8xxx_led_current_set_for_key(int brightness_key);
 
