@@ -336,6 +336,10 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 #endif
 
 	return 0;
+	
+	policy->min = CONFIG_MSM_CPU_FREQ_MIN;
+	policy->max = CONFIG_MSM_CPU_FREQ_MAX;
+
 }
 
 static int msm_cpufreq_suspend(void)
