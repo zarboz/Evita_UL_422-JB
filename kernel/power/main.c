@@ -820,7 +820,10 @@ static struct attribute *g[] = {
 	&wake_lock_attr.attr,
 	&wake_unlock_attr.attr,
 #endif
+#ifdef CONFIG_PERFLOCK
+	&state_onchg_attr.attr,
 #endif
+
 #ifdef CONFIG_PERFLOCK
 	&perflock_attr.attr,
 	&cpufreq_ceiling_attr.attr,
