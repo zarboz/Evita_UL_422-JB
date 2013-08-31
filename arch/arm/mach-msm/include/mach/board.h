@@ -448,7 +448,9 @@ struct msm_camera_sensor_info {
 #endif
 	
 	int sensor_cut;
-
+#ifdef CONFIG_RAWCHIPII
+	int stop_yushanii_first;
+#endif
 };
 
 struct msm_camera_board_info {

@@ -242,6 +242,7 @@ struct msm_sensor_ctrl_t {
 	int hdr_mode;
 	int yushanII_switch_virtual_channel;
 	int adjust_y_output_size;
+	int adjust_frame_length_line;
 	uint8_t driver_ic;
 };
 
@@ -353,12 +354,5 @@ int32_t msm_sensor_adjust_frame_lines(struct msm_sensor_ctrl_t *s_ctrl,
 
 #define VIDIOC_MSM_SENSOR_RELEASE \
 	_IO('V', BASE_VIDIOC_PRIVATE + 11)
-
-
-struct file* msm_fopen(const char* path, int flags, int rights);
-int msm_fwrite(struct file* file, unsigned long long offset, unsigned char* data, unsigned int size);
-void msm_fclose(struct file* file);
-
-
 
 #endif

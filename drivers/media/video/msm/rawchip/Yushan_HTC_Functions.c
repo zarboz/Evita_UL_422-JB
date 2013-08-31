@@ -711,9 +711,9 @@ int Yushan_sensor_open_init(struct rawchip_sensor_init_data data)
 	    sDxoDopTuning.bNoiseVsDetailsHiGain = 0xA8;
 	    sDxoDopTuning.bSharpness = 0;
 #if defined(CONFIG_MACH_MONARUDO) ||\
-    defined(CONFIG_MACH_DUMMY) ||\
+    defined(CONFIG_MACH_DELUXE_J) ||\
     defined(CONFIG_MACH_DELUXE_R) ||\
-    defined(CONFIG_MACH_DUMMY) ||\
+    defined(CONFIG_MACH_IMPRESSION_J) ||\
     defined(CONFIG_MACH_DUMMY) ||\
     defined(CONFIG_MACH_DUMMY) ||\
     defined(CONFIG_MACH_DUMMY)
