@@ -194,6 +194,16 @@ static int BMA_set_mode(unsigned char mode)
 
 	memset(buffer, 0, 2);
 
+	if (pdata->power_LPM && (mode < 2)) {
+		switch (mode) {
+		case bma250_MODE_NORMAL:
+			pdata->power_LPM(0);
+			break;
+		default:
+			break;
+		}
+	}
+
 	D("%s: mode = 0x%02x\n", __func__, mode);
 	if (mode < 2) {
 		buffer[0] = bma250_MODE_CTRL_REG;
@@ -223,6 +233,15 @@ static int BMA_set_mode(unsigned char mode)
 	if (mode == bma250_MODE_NORMAL)
 		usleep(2000);
 	
+	if (pdata->power_LPM && (mode < 2)) {
+		switch (mode) {
+		case bma250_MODE_SUSPEND:
+			pdata->power_LPM(1);
+			break;
+		default:
+			break;
+		}
+	}
 
 	return ret;
 }
