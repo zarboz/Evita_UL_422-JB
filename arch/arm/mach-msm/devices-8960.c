@@ -2434,7 +2434,7 @@ unsigned msm8960_num_footswitch __initdata = ARRAY_SIZE(msm8960_footswitch);
 static struct msm_bus_vectors rotator_init_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_ROTATOR,
-		.dst = MSM_BUS_SLAVE_EBI_CH0,grp3d_nominal_low_vectors
+		.dst = MSM_BUS_SLAVE_EBI_CH0,
 		.ab = 0,
 		.ib = 0,
 	},
