@@ -1,0 +1,34 @@
+--- drivers/input/misc/gpio_input.c	2013-06-24 02:50:46.000000000 -0600
++++ drivers/input/misc/gpio_input.c	2013-08-01 23:38:02.000000000 -0600
+@@ -96,13 +100,20 @@
+ 
+ static DEVICE_ATTR(vol_wakeup, 0664, vol_wakeup_show, vol_wakeup_store);
+ 
++#ifdef CONFIG_PWRKEY_WAKESRC_LOG
++static uint16_t power_key_gpio;
++uint16_t get_power_key_gpio(void)
++{
++	return power_key_gpio;
++}
++EXPORT_SYMBOL(get_power_key_gpio);
++#endif
+ 
+ #ifdef CONFIG_PWRKEY_STATUS_API
+ static uint8_t power_key_state;
+ static spinlock_t power_key_state_lock;
+ 
+ #define PWRKEY_PRESS_DUE 1*HZ
+-#include <linux/module.h>
+ static void init_power_key_api(void)
+ {
+ 	spin_lock_init(&power_key_state_lock);
+@@ -276,6 +292,9 @@
+ 	if (!pocket_mode && pre_power_key_led_status == 1 && !is_rrm1_mode()) {
+ 		
+ 		set_hw_reason(0);
++#if defined(CONFIG_PM8921_BMS) && (CONFIG_HTC_BATT_8960)
++		pm8921_store_hw_reset_reason(1);
++#endif
+ 		clear_hw_reset();
+ 		set_restart_to_ramdump("Powerkey Hard Reset - SW");
+ 		msm_restart(0, NULL);

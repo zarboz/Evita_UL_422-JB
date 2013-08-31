@@ -35,6 +35,7 @@
 #include <linux/ctype.h>
 #endif
 #define SYN_I2C_RETRY_TIMES 10
+#define SYN_UPDATE_RETRY_TIMES 5
 #define SHIFT_BITS 10
 #define SYN_WIRELESS_DEBUG
 #define SYN_CALIBRATION_CONTROL
@@ -1542,7 +1543,7 @@ static int synaptics_touch_sysfs_init(void)
 		pr_info("[TP]%s: Failed to obtain touchpad IRQ %d. Code: %d.", __func__, ts->gpio_irq, ret);
 		return ret;
 	}
-	if (ts->gpio_reset) {
+	if (ts->gpio_reset && !ts->i2c_err_handler_en) {
 		ret = gpio_request(ts->gpio_reset, "synaptics_reset");
 		if (ret)
 			pr_info("[TP]%s: Failed to obtain reset pin: %d. Code: %d.", __func__, ts->gpio_reset, ret);
@@ -2728,6 +2729,16 @@ static int synaptics_ts_probe(
 		} else
 			break;
 	}
+	ts->i2c_err_handler_en = pdata->i2c_err_handler_en;
+	if (ts->i2c_err_handler_en) {
+		ts->gpio_reset = pdata->gpio_reset;
+		ts->use_irq = 1;
+		if (ts->gpio_reset) {
+			ret = gpio_request(ts->gpio_reset, "synaptics_reset");
+			if (ret)
+				printk(KERN_INFO "[TP]%s: Failed to obtain reset pin: %d. Code: %d.", __func__, ts->gpio_reset, ret);
+		}
+	}
 
 	if (i == 10) {
 		uint8_t num = 0;
@@ -2785,7 +2796,11 @@ static int synaptics_ts_probe(
 
 		if (pdata->tw_pin_mask) {
 			ts->tw_pin_mask = pdata->tw_pin_mask;
-			ret = syn_get_tw_vendor(ts, pdata->gpio_irq);
+			for (i=0; i<SYN_UPDATE_RETRY_TIMES; i++) {
+				ret = syn_get_tw_vendor(ts, pdata->gpio_irq);
+				if (ret == 0)
+					break;
+			}
 			if (ret < 0) {
 				printk(KERN_ERR "[TP] TOUCH_ERR: syn_get_tw_vendor fail\n");
 				goto err_init_failed;
@@ -2831,7 +2846,11 @@ static int synaptics_ts_probe(
 	}
 
 #ifndef SYN_DISABLE_CONFIG_UPDATE
-	ret = syn_config_update(ts, pdata->gpio_irq);
+	for (i=0; i<SYN_UPDATE_RETRY_TIMES; i++) {
+		ret = syn_config_update(ts, pdata->gpio_irq);
+		if (ret >= 0)
+			break;
+	}
 	if (ret < 0) {
 		printk(KERN_ERR "[TP] TOUCH_ERR: syn_config_update fail\n");
 		goto err_init_failed;
@@ -3233,7 +3252,7 @@ static int synaptics_ts_suspend(struct i2c_client *client, pm_message_t mesg)
 
 static int synaptics_ts_resume(struct i2c_client *client)
 {
-	int ret;
+	int ret, i;
 	struct synaptics_ts_data *ts = i2c_get_clientdata(client);
      scr_suspended = true;
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE  
@@ -3274,6 +3293,17 @@ static int synaptics_ts_resume(struct i2c_client *client)
 		}
 		input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0);
 		input_sync(ts->input_dev);
+	} else if (ts->htc_event == SYN_AND_REPORT_TYPE_B) {
+		if (ts->package_id >= 3400) {
+			for (i = 0; i < ts->finger_support; i++) {
+				input_mt_slot(ts->input_dev, i);
+				input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, 0);
+				input_sync(ts->input_dev);
+				
+			}
+			ts->tap_suppression = 0;
+			ts->finger_pressed = 0;
+		}
 	} else if (ts->htc_event == SYN_AND_REPORT_TYPE_HTC) {
 		input_report_abs(ts->input_dev, ABS_MT_AMPLITUDE, 0);
 		input_report_abs(ts->input_dev, ABS_MT_POSITION, 1 << 31);

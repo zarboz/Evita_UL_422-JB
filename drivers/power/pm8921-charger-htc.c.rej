@@ -1,0 +1,119 @@
+--- drivers/power/pm8921-charger-htc.c	2013-06-24 02:50:45.000000000 -0600
++++ drivers/power/pm8921-charger-htc.c	2013-08-01 23:38:01.000000000 -0600
+@@ -282,11 +282,13 @@
+ 	int				cable_in_irq;
+ 	int				cable_in_gpio;
+ 	int				is_embeded_batt;
++	int				eoc_ibat_thre_ma;
++	int				ichg_threshold_ua;
++	int 				ichg_regulation_thr_ua;
+ 	struct delayed_work		update_heartbeat_work;
+ 	struct delayed_work		eoc_work;
+ 	struct delayed_work		ovp_check_work;
+ 	struct delayed_work		recharge_check_work;
+-	struct work_struct		unplug_ovp_fet_open_work;
+ 	struct work_struct		chghot_work;
+ 	struct delayed_work		unplug_check_work;
+ 	struct delayed_work		vin_collapse_check_work;
+@@ -2769,7 +2772,7 @@
+ {
+ 	int ichg_meas_ua, vbat_uv;
+ 	int ichg_meas_ma;
+-	int adj_vdd_max_mv, programmed_vdd_max;
++	int adj_vdd_max_mv, programmed_vdd_max, target_vdd_max;
+ 	int vbat_batt_terminal_uv;
+ 	int vbat_batt_terminal_mv;
+ 	int reg_loop;
+@@ -2787,11 +2790,6 @@
+ 	}
+ 
+ 	reg_loop = pm_chg_get_regulation_loop(chip);
+-	if (!(reg_loop & VDD_LOOP_ACTIVE_BIT)) {
+-		pr_debug("Exiting Vdd loop is not active reg loop=0x%x\n",
+-			reg_loop);
+-		return;
+-	}
+ 
+ 	pm8921_bms_get_simultaneous_battery_voltage_and_current(&ichg_meas_ua,
+ 								&vbat_uv);
+@@ -2799,6 +2797,9 @@
+ 		pr_debug("Exiting ichg_meas_ua = %d > 0\n", ichg_meas_ua);
+ 		return;
+ 	}
++
++	if (chip->ichg_threshold_ua)
++		ichg_threshold_ua = chip->ichg_threshold_ua;
+ 	if (ichg_meas_ua <= ichg_threshold_ua) {
+ 		pr_debug("Exiting ichg_meas_ua = %d < ichg_threshold_ua = %d\n",
+ 					ichg_meas_ua, ichg_threshold_ua);
+@@ -2811,11 +2812,20 @@
+ 	vbat_batt_terminal_mv = vbat_batt_terminal_uv/1000;
+ 	pm_chg_vddmax_get(the_chip, &programmed_vdd_max);
+ 
+-	last_delta_mv = delta_mv =  chip->max_voltage_mv - vbat_batt_terminal_mv;
++	if (!chip->ichg_regulation_thr_ua)
++		target_vdd_max = chip->max_voltage_mv;
++	else if (ichg_meas_ua > chip->ichg_regulation_thr_ua)
++		target_vdd_max = chip->max_voltage_mv;
++	else
++		target_vdd_max = chip->max_voltage_mv + vdd_max_increase_mv;
++
++	last_delta_mv = delta_mv =  target_vdd_max - vbat_batt_terminal_mv;
+ 	pr_info("%s: rconn_mohm=%d, reg_loop=0x%x, vbat_uv=%d, ichg_ma=%d, "
+-			"vbat_terminal_mv=%d, delta_mv=%d\n",
++			"vbat_terminal_mv=%d, delta_mv=%d, ichg_regulation_thr_ua=%d, "
++			"target_vdd_max=%d, ichg_threshold_ua=%d\n",
+ 			__func__, chip->rconn_mohm, reg_loop, vbat_uv, ichg_meas_ma,
+-			vbat_batt_terminal_mv, delta_mv);
++			vbat_batt_terminal_mv, delta_mv, chip->ichg_regulation_thr_ua,
++			target_vdd_max, ichg_threshold_ua);
+ 	if (delta_mv > delta_threshold_mv && delta_mv <= 0) {
+ 		pr_debug("skip delta_mv=%d since it is between %d and 0\n",
+ 				delta_mv, delta_threshold_mv);
+@@ -2828,13 +2838,10 @@
+ 			programmed_vdd_max,
+ 			adj_vdd_max_mv);
+ 
+-	if (adj_vdd_max_mv < chip->max_voltage_mv) {
+-		pr_debug("adj vdd_max lower than default max voltage\n");
+-		return;
+-	}
+-
+ 	if (adj_vdd_max_mv > (chip->max_voltage_mv + vdd_max_increase_mv))
+ 		adj_vdd_max_mv = chip->max_voltage_mv + vdd_max_increase_mv;
++	else if ( adj_vdd_max_mv < chip->max_voltage_mv )
++		adj_vdd_max_mv = chip->max_voltage_mv;
+ 
+ 	pr_info("%s: adjusting vdd_max_mv to %d from %d to make "
+ 		"vbat_batt_termial_uv = %d to %d\n",
+@@ -3329,11 +3336,8 @@
+ 
+ #define WRITE_BANK_4		0xC0
+ #define OVP_DEBOUNCE_TIME 0x06
+-static void unplug_ovp_fet_open_worker(struct work_struct *work)
++static void unplug_ovp_fet_open(struct pm8921_chg_chip *chip)
+ {
+-	struct pm8921_chg_chip *chip = container_of(work,
+-				struct pm8921_chg_chip,
+-				unplug_ovp_fet_open_work);
+ 	int chg_gone = 0, active_chg_plugged_in = 0, count = 0, is_wlc_remove = 0;
+ 	u8 active_mask = 0;
+ 	u16 ovpreg, ovptestreg;
+@@ -4346,7 +4342,8 @@
+ 
+ 	pr_info("V=%d mV, I=%d mA, T=%d C, SoC=%d%%, FCC=%d, id=%d mV,"
+ 			" H=%d, P=%d, CHG=%d, S=%d, FSM=%d, AC=%d, USB=%d, DC=%d, WLC=%d"
+-			" iusb_ma=%d, usb_target_ma=%d, OVP=%d, UVP=%d, TM=%d, eoc_count=%d,"
++			" iusb_ma=%d, usb_target_ma=%d, OVP=%d, UVP=%d, TM=%d,"
++			" eoc_count/by_curr=%d/%d,"
+ 			" vbatdet_low=%d, is_ac_ST=%d, batfet_dis=0x%x, pwrsrc_dis=0x%x,"
+ 			" is_full=%d, temp_fault=%d, is_bat_warm/cool=%d/%d,"
+ 			" btm_warm/cool=%d/%d, ichg=%d uA, vph_pwr=%d uV, usbin=%d uV,"
+@@ -6187,6 +6205,7 @@
+ 	else
+ 		chip->wlc_tx_gpio = 0;
+ 	chip->is_embeded_batt = pdata->is_embeded_batt;
++	chip->eoc_ibat_thre_ma = pdata->eoc_ibat_thre_ma;
+ 	chip->cold_thr = pdata->cold_thr;
+ 	chip->hot_thr = pdata->hot_thr;
+ 	chip->rconn_mohm = pdata->rconn_mohm;

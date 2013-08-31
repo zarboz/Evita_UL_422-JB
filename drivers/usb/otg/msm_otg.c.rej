@@ -1,0 +1,12 @@
+--- drivers/usb/otg/msm_otg.c	2013-06-24 02:50:45.000000000 -0600
++++ drivers/usb/otg/msm_otg.c	2013-08-01 23:38:00.000000000 -0600
+@@ -3850,9 +3915,6 @@
+ 				(unsigned long) motg);
+ 	motg->ac_detect_count = 0;
+ 
+-	if (board_mfg_mode() == 5) 
+-		USB_disabled = 1;
+-
+ 	ret = request_irq(motg->irq, msm_otg_irq, IRQF_SHARED,
+ 					"msm_otg", motg);
+ 	if (ret) {

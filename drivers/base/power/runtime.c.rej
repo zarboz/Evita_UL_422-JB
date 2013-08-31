@@ -1,0 +1,92 @@
+--- drivers/base/power/runtime.c	2013-06-24 02:50:47.000000000 -0600
++++ drivers/base/power/runtime.c	2013-08-01 23:38:03.000000000 -0600
+@@ -150,7 +150,7 @@
+ 	retval = rpm_check_suspend_allowed(dev);
+ 	
+ 	
+-	#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++	#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 	if (msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 		dev_info(dev,"%s: rpm_check_suspend_allowed return %d\n", __func__, retval);
+ 	}
+@@ -1182,7 +1182,7 @@
+ 		if (!atomic_dec_and_test(&dev->power.usage_count)) {
+ 			
+ 			
+-			#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++			#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 			if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 				dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 					atomic_read(&dev->power.usage_count));
+@@ -1196,7 +1196,7 @@
+ 
+ 		
+ 		
+-		#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++		#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 		if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 			dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 				atomic_read(&dev->power.usage_count));
+@@ -1225,7 +1225,7 @@
+ 		if (!atomic_dec_and_test(&dev->power.usage_count)) {
+ 			
+ 			
+-			#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++			#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 			if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 				dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 					atomic_read(&dev->power.usage_count));
+@@ -1238,7 +1238,7 @@
+ 
+ 		
+ 		
+-		#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++		#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 		if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 			dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 				atomic_read(&dev->power.usage_count));
+@@ -1280,7 +1280,7 @@
+ 
+ 		
+ 		
+-		#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++		#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 		if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 			dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 				atomic_read(&dev->power.usage_count));
+@@ -1505,7 +1505,7 @@
+ 
+ 	
+ 	
+-	#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++	#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 	if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 		dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 			atomic_read(&dev->power.usage_count));
+@@ -1533,7 +1533,7 @@
+ 
+ 	
+ 	
+-	#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++	#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 	if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 		dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 			atomic_read(&dev->power.usage_count));
+@@ -1580,7 +1580,7 @@
+ 
+ 			
+ 			
+-			#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++			#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 			if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 				dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 					atomic_read(&dev->power.usage_count));
+@@ -1602,7 +1602,7 @@
+ 
+ 			
+ 			
+-			#if defined(CONFIG_USB_EHCI_MSM_HSIC)
++			#if defined(CONFIG_ARCH_APQ8064) && defined(CONFIG_USB_EHCI_MSM_HSIC)
+ 			if (dev && msm_hsic_host_dev == dev && (mdm_is_in_restart || (get_radio_flag() & 0x0001))) {
+ 				dev_info(dev, "%s[%d] usage_count[%d]\n", __func__, __LINE__,
+ 					atomic_read(&dev->power.usage_count));

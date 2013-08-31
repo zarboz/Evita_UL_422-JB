@@ -224,6 +224,8 @@ endif
 
 ifdef CONFIG_BT
 	obj-$(CONFIG_MACH_MONARUDO) += board-monarudo-rfkill.o  htc_bdaddress.o
+	obj-$(CONFIG_MACH_DELUXE_J) += board-deluxe_j-rfkill.o  htc_bdaddress.o
+	obj-$(CONFIG_MACH_IMPRESSION_J) += board-impression_j-rfkill.o  htc_bdaddress.o
 	obj-$(CONFIG_MACH_M7_UL) += board-m7-rfkill.o  htc_bdaddress.o htc_4335_wl_reg.o
 endif
 
@@ -320,9 +322,13 @@ obj-$(CONFIG_MACH_APQ8064_LIQUID) += board-8064-all.o board-8064-regulator.o
 obj-$(CONFIG_MACH_MPQ8064_HRD) += board-8064-all.o board-8064-regulator.o
 obj-$(CONFIG_MACH_MPQ8064_DTV) += board-8064-all.o board-8064-regulator.o
 obj-$(CONFIG_MACH_MONARUDO) += board-monarudo-all.o board-monarudo-regulator.o
+obj-$(CONFIG_MACH_DELUXE_J) += board-deluxe_j-all.o board-deluxe_j-regulator.o
+obj-$(CONFIG_MACH_IMPRESSION_J) += board-impression_j-all.o board-impression_j-regulator.o
 obj-$(CONFIG_MACH_M7_UL) += board-m7-all.o board-m7-regulator.o
 
 obj-$(CONFIG_MACH_MONARUDO) += htc_util.o
+obj-$(CONFIG_MACH_DELUXE_J) += htc_util.o ADP5585_ioextender.o
+obj-$(CONFIG_MACH_IMPRESSION_J) += htc_util.o ADP5585_ioextender.o
 obj-$(CONFIG_MACH_M7_UL) += htc_util.o
 obj-$(CONFIG_MACH_ELITE) += board-elite.o board-elite-regulator.o board-elite-gpiomux.o board-elite-storage.o board-elite-audio.o board-elite-camera.o 
 obj-$(CONFIG_MACH_ELITE) += board-elite-keypad.o
@@ -349,6 +355,8 @@ obj-$(CONFIG_MACH_OPERAUL) += htc_bdaddress.o board-operaul-rfkill.o htc_sleep_c
 #obj-$(CONFIG_MACH_OPERAUL) += htc_acoustic.o
 obj-$(CONFIG_MACH_OPERAUL) += board-operaul-keypad.o
 obj-$(CONFIG_MACH_OPERAUL) += board-operaul-mmc.o board-operaul-wifi.o htc_wifi_nvs.o
+
+
 
 
 

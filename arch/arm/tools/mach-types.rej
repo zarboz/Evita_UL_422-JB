@@ -1,0 +1,10 @@
+--- arch/arm/tools/mach-types	2013-06-24 02:50:48.000000000 -0600
++++ arch/arm/tools/mach-types	2013-08-01 23:38:05.000000000 -0600
+@@ -1197,5 +1197,6 @@
+ msm8625_ffa		MACH_MSM8625_FFA	MSM8625_FFA		4166
+ msm8625_evt		MACH_MSM8625_EVT	MSM8625_EVT		4193
+ monarudo		MACH_MONARUDO		MONARUDO		4060
++deluxe_j		MACH_DELUXE_J		DELUXE_J		4201
++impression_j		MACH_IMPRESSION_J	IMPRESSION_J		4280
+ m7_ul           MACH_M7_UL          M7_UL           4308
+-

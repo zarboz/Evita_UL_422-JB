@@ -1,0 +1,101 @@
+--- drivers/power/pm8921-bms-htc.c	2013-06-24 02:50:45.000000000 -0600
++++ drivers/power/pm8921-bms-htc.c	2013-08-01 23:38:01.000000000 -0600
+@@ -30,6 +30,7 @@
+ #include <linux/mutex.h>
+ #include <mach/board_htc.h>
+ #include <mach/htc_restart_handler.h>
++#include <asm/uaccess.h>
+ 
+ #ifdef CONFIG_HTC_BATT_8960
+ #include "mach/htc_battery_cell.h"
+@@ -229,9 +240,12 @@
+ static int bms_end_cc_uah;
+ 
+ static int ocv_update_stop_active_mask = OCV_UPDATE_STOP_BIT_CABLE_IN |
+-											OCV_UPDATE_STOP_BIT_ATTR_FILE;
++											OCV_UPDATE_STOP_BIT_ATTR_FILE |
++											OCV_UPDATE_STOP_BIT_BOOT_UP;
+ static int ocv_update_stop_reason;
+ static int level_dropped_after_cable_out = 5;
++static int level_dropped_after_boot_up = 5;
++static int new_boot_soc;
+ static int bms_discharge_percent;
+ static int is_ocv_update_start;
+ struct mutex ocv_update_lock;
+@@ -1905,6 +2002,15 @@
+ 		bms_discharge_percent = 0;
+ 		disable_ocv_update_with_reason(false, OCV_UPDATE_STOP_BIT_CABLE_IN);
+ 	}
++	if (new_boot_soc &&
++			((new_boot_soc - *result) >=
++				level_dropped_after_boot_up)) {
++		pr_info("OCV can be update due to %d - %d >= %d\n",
++				new_boot_soc, *result,
++				level_dropped_after_boot_up);
++		new_boot_soc = 0;
++		disable_ocv_update_with_reason(false, OCV_UPDATE_STOP_BIT_BOOT_UP);
++	}
+ 	if (the_chip->level_ocv_update_stop_begin &&
+ 			the_chip->level_ocv_update_stop_end) {
+ 		if (*result >= the_chip->level_ocv_update_stop_begin &&
+@@ -3185,17 +3322,12 @@
+ 	chip->i_test = pdata->i_test;
+ 	chip->v_failure = pdata->v_failure;
+ 	chip->rconn_mohm = pdata->rconn_mohm;
++	chip->store_batt_data_soc_thre = pdata->store_batt_data_soc_thre;
+ 	chip->criteria_sw_est_ocv = pdata->criteria_sw_est_ocv;
+ 	chip->rconn_mohm_sw_est_ocv = pdata->rconn_mohm_sw_est_ocv;
+ 	chip->cc_backup_uv = 0;
+ 	chip->ocv_reading_at_100 = 0;
+ 	chip->ocv_backup_uv = 0;
+-	if (pdata->level_ocv_update_stop_begin && pdata->level_ocv_update_stop_end) {
+-		chip->level_ocv_update_stop_begin = pdata->level_ocv_update_stop_begin;
+-		chip->level_ocv_update_stop_end = pdata->level_ocv_update_stop_end;
+-		ocv_update_stop_active_mask = ocv_update_stop_active_mask |
+-										OCV_UPDATE_STOP_BIT_BATT_LEVEL;
+-	}
+ 	chip->start_percent = -EINVAL;
+ 	chip->end_percent = -EINVAL;
+ 	chip->batt_temp_channel = pdata->bms_cdata.batt_temp_channel;
+@@ -3265,12 +3397,38 @@
+ 	pm8921_bms_enable_irq(chip, PM8921_BMS_OCV_FOR_R);
+ 
+ 	get_battery_uvolts(chip, &vbatt);
+-	pr_info("OK battery_capacity_at_boot=%d volt = %d ocv = %d\n",
+-				pm8921_bms_get_percent_charge(),
+-				vbatt, last_ocv_uv);
++	curr_soc = pm8921_bms_get_percent_charge();
++
++	
++	if (batt_stored_magic_num == BMS_STORE_MAGIC_NUM
++			&& the_chip->store_batt_data_soc_thre > 0
++			&& (curr_soc - batt_stored_soc) > 5
++			&& (currtime_ms - batt_stored_time_ms) < 3600000 ) {
++		read_soc_params_raw(the_chip, &raw);
++		chip->cc_backup_uv = raw.cc - batt_stored_cc_uv;
++		chip->ocv_backup_uv = last_ocv_uv = batt_stored_ocv_uv;
++		chip->ocv_reading_at_100 = 0;
++		write_backup_cc_uv(chip->cc_backup_uv);
++		write_backup_ocv_at_100(chip->ocv_reading_at_100);
++		write_backup_ocv_uv(chip->ocv_backup_uv);
++
++		new_boot_soc = pm8921_bms_get_percent_charge();
++		
++		disable_ocv_update_with_reason(true, OCV_UPDATE_STOP_BIT_BOOT_UP);
++	}
++	
++	pm8921_store_hw_reset_reason(0);
++
++	pr_info("OK battery_capacity_at_boot=%d, new_boot_soc=%d, volt=%d, "
++			"ocv=%d, batt_magic_num=%x, stored_soc=%d, curr_time=%ld, "
++			"stored_time=%ld\n",
++				curr_soc, new_boot_soc, vbatt, last_ocv_uv,
++				batt_stored_magic_num, batt_stored_soc,
++				currtime_ms, batt_stored_time_ms);
+ 	pr_info("r_sense=%u,i_test=%u,v_failure=%u,default_rbatt_mohm=%d\n",
+ 			chip->r_sense, chip->i_test, chip->v_failure,
+ 			chip->default_rbatt_mohm);
++
+ 	return 0;
+ 
+ free_irqs:
