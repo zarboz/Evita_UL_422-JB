@@ -170,8 +170,10 @@ void pm8xxx_led_current_set_for_key(int brightness_key)
 
 
 struct led_classdev *led_cdev_buttons = 0;
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 static int buttons_led_is_blinking = 0;
 static int buttons_led_is_on = 0;
+#endif
 
 void pm8xxx_led_current_set_flagged(struct led_classdev *led_cdev, enum led_brightness brightness, int blink)
 {
@@ -199,7 +201,7 @@ void pm8xxx_led_current_set_flagged(struct led_classdev *led_cdev, enum led_brig
 			LED_ERR("%s can't set (%d) led value rc=%d\n", __func__, led->id, rc);
 
 		if (led->function_flags & LED_BRETH_FUNCTION) {
-		
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 			if (blink == 0)
 			{
 				buttons_led_is_on = 1;
@@ -214,6 +216,7 @@ void pm8xxx_led_current_set_flagged(struct led_classdev *led_cdev, enum led_brig
 							0, 0,
 							led->lut_flag);
 			} else
+#endif
 			{
 				pduties = led->duties;
 				// LUT_LOOP for blinking
@@ -232,9 +235,13 @@ void pm8xxx_led_current_set_flagged(struct led_classdev *led_cdev, enum led_brig
 			pwm_config(led->pwm_led, 64000, 64000);
 			pwm_enable(led->pwm_led);
 		}
-	} else {
+	} 
+
+		else {
 		if (led->function_flags & LED_BRETH_FUNCTION) {
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 			buttons_led_is_on = 0;
+#endif
 			wake_lock_timeout(&pmic_led_wake_lock, HZ*2);
 			pduties = led->duties + led->duites_size;
 			pm8xxx_pwm_lut_config(led->pwm_led,
@@ -250,7 +257,8 @@ void pm8xxx_led_current_set_flagged(struct led_classdev *led_cdev, enum led_brig
 			queue_delayed_work(g_led_work_queue,
 						&led->fade_delayed_work,
 						msecs_to_jiffies(led->duty_time_ms*led->duites_size));
-		} else {
+		}
+                   else {
 			pwm_disable(led->pwm_led);
 			level = (0 << PM8XXX_DRV_LED_CTRL_SHIFT) & PM8XXX_DRV_LED_CTRL_MASK;
 			offset = PM8XXX_LED_OFFSET(led->id);
@@ -285,7 +293,7 @@ void pm8xxx_led_current_set(struct led_classdev *led_cdev, enum led_brightness b
 	pm8xxx_led_current_set_flagged( led_cdev, brightness, 0);
 }
 
-
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 static void pm8xxx_buttons_blink(int on)
 {
 	if (on > 0)
@@ -306,6 +314,7 @@ static void pm8xxx_buttons_blink(int on)
 		pm8xxx_led_current_set_flagged(led_cdev_buttons, 0, 1);
 	}
 }
+#endif
 
 static void pm8xxx_led_gpio_set(struct led_classdev *led_cdev, enum led_brightness brightness)
 {
@@ -510,10 +519,12 @@ static ssize_t pm8xxx_led_blink_store(struct device *dev,
 				pwm_disable(amber_back_led_data->pwm_led);
 			}
 		}
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 		if (blink_buttons > 0)
 		{
 			pm8xxx_buttons_blink(0);
 		}
+#endif
 		break;
 	case BLINK_UNCHANGE:
 		pwm_disable(ldata->pwm_led);
@@ -537,10 +548,12 @@ static ssize_t pm8xxx_led_blink_store(struct device *dev,
 					pwm_enable(amber_back_led_data->pwm_led);
 				}
 			}
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 			if (blink_buttons > 0 && val > 0)
 			{
 				pm8xxx_buttons_blink(1);
 			}
+#endif
 		} else {
 			pwm_disable(ldata->pwm_led);
 			if (ldata->gpio_status_switch != NULL)
@@ -568,10 +581,12 @@ static ssize_t pm8xxx_led_blink_store(struct device *dev,
 					pm8xxx_writeb(amber_back_led_data->dev->parent, SSBI_REG_ADDR_LED_CTRL(offset), amber_back_led_data->reg);
 				}
 			}
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 			if (blink_buttons > 0)
 			{
 				pm8xxx_buttons_blink(0);
 			}
+#endif
 		}
 		break;
 	case BLINK_64MS_PER_2SEC:
@@ -597,11 +612,13 @@ static ssize_t pm8xxx_led_blink_store(struct device *dev,
 				pwm_enable(amber_back_led_data->pwm_led);
 			}
 		}
+#ifdef CONFIG_SYNAPTICS_SWEEP2WAKE
 		if (blink_buttons > 0 && val > 0)
 		{
 			pm8xxx_buttons_blink(1);
 		}
-		break;
+		break
+#endif
 	case BLINK_64MS_ON_310MS_PER_2SEC:
 		cancel_delayed_work_sync(&ldata->blink_delayed_work);
 		pwm_disable(ldata->pwm_led);
